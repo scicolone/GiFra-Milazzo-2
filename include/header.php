@@ -13,6 +13,14 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
 ?>
 <!DOCTYPE html>
 <html lang="it">
+    <div class="navbar-nav ms-auto">
+            <?php if (isset($_SESSION['utente_id'])): ?>
+                <span class="navbar-text me-3">Benvenuto, <?php echo htmlspecialchars($_SESSION['nome']); ?></span>
+                <a href="../auth/logout.php" class="btn btn-outline-light btn-sm">Logout</a>
+            <?php else: ?>
+                <a href="../auth/login.php" class="btn btn-outline-light btn-sm">Login</a>
+            <?php endif; ?>
+</div>
 <head>
     <meta charset="UTF-8">
     <title>A.S.D. Gi.Fra. Milazzo - Gestione Sportiva</title>
