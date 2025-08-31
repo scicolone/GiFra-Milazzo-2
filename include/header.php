@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="it">
+    // Recupera la stagione attiva
+$stmt = $pdo->query("SELECT anno_inizio, anno_fine FROM stagioni WHERE attiva = TRUE LIMIT 1");
+$stagione_attiva = $stmt->fetch(PDO::FETCH_ASSOC);
+$stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $stagione_attiva['anno_fine'] : 'Nessuna';
+?>
+
 <head>
     <meta charset="UTF-8">
     <title>A.S.D. Gi.Fra. Milazzo - Gestione Sportiva</title>
@@ -12,7 +18,7 @@
     <div class="container">
         <img src="img/logo.png" alt="Logo Gi.Fra. Milazzo" class="logo">
         <h1>A.S.D. GI.FRA. MILAZZO</h1>
-        <p class="lead">Stagione Corrente: 2025/26</p>
+        <p class="season-text mb-0">Stagione Attiva: <?php echo $stagione_label; ?></p>
     </div>
 </header>
 <div class="container">
