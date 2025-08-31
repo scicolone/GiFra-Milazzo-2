@@ -137,3 +137,31 @@ footer {
 .btn:hover {
     background-color: var(--secondary-blue);
 }
+/* Header unificato */
+header {
+    background-color: #1976d2;
+    color: white;
+    text-align: center;
+    padding: 30px 0;
+    border-bottom: 2px solid #d32f2f;
+}
+
+.logo {
+    width: 180px;
+    height: auto;
+    display: block;
+    margin: 0 auto 15px;
+}
+
+h1 {
+    font-size: 2rem;
+    color: #d32f2f;
+    margin: 0;
+    font-weight: bold;
+}
+
+.lead {
+    color: #eee;
+    font-size: 0.9rem;
+    margin: 5px 0 0;
+}
