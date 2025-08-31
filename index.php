@@ -6,7 +6,7 @@
         <div class="card">
             <h2 class="card-title">TABELLE FUNZIONALITÀ GENERALI</h2>
             <a href="moduli/categorie.php" class="btn">TABELLA CATEGORIE</a>
-            <a href="moduli/stagioni.php" class="btn">TABELLA STAGIONI</a>
+            <a href="moduli/stagioni.php" class="btn">CREA NUOVA STAGIONE</a>
             <a href="moduli/cambio_stagione.php" class="btn">CAMBIO STAGIONE</a>
         </div>
 
