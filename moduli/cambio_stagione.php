@@ -1,6 +1,7 @@
 <?php
-include '../config.php';
-
+// Usa un percorso assoluto dal root del sito
+$root = dirname(__DIR__); // Questo punta alla root del progetto
+require_once $root . '/config.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_stagione = $_POST['stagione_id'];
 
