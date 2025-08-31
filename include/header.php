@@ -1,6 +1,9 @@
 <?php
 session_start();
-include '../config.php';
+
+// Percorso assoluto per includere config.php dalla root
+$root = dirname(__DIR__); // punta alla root del progetto
+require_once $root . '/config.php'; // carica config.php
 
 // Recupera la stagione attiva
 $stmt = $pdo->query("SELECT anno_inizio, anno_fine FROM stagioni WHERE attiva = TRUE LIMIT 1");
@@ -14,15 +17,15 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
     <meta charset="UTF-8">
     <title>A.S.D. Gi.Fra. Milazzo - Gestione Sportiva</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css"> <!-- Percorso corretto -->
+    <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" href="../img/logo.png">
 </head>
 <body>
-<header>
+<header class="bg-primary text-white text-center py-4">
     <div class="container">
         <img src="../img/logo.png" alt="Logo Gi.Fra. Milazzo" class="logo">
-        <h1>A.S.D. GI.FRA. MILAZZO</h1>
-        <p class="lead">Stagione Attiva: <?php echo $stagione_label; ?></p>
+        <h1 class="mb-0">A.S.D. GI.FRA. MILAZZO</h1>
+        <p class="lead mb-0">Stagione Attiva: <?php echo $stagione_label; ?></p>
     </div>
 </header>
 
