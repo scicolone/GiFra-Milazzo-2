@@ -59,5 +59,8 @@ foreach ($stagioni as $s) {
         </div>
     </div>
 </div>
-
+<div class="mt-4">
+    <a href="javascript:history.back()" class="btn btn-secondary">← Indietro</a>
+    <a href="../index.php" class="btn btn-primary">🏠 Torna alla Home</a>
+</div>
 <?php include '../include/footer.php'; ?>
