@@ -1,11 +1,14 @@
-<!DOCTYPE html>
-<html lang="it">
-    // Recupera la stagione attiva
+<?php
+session_start();
+include 'config.php';
+
+// Recupera la stagione attiva
 $stmt = $pdo->query("SELECT anno_inizio, anno_fine FROM stagioni WHERE attiva = TRUE LIMIT 1");
 $stagione_attiva = $stmt->fetch(PDO::FETCH_ASSOC);
 $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $stagione_attiva['anno_fine'] : 'Nessuna';
 ?>
-
+<!DOCTYPE html>
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <title>A.S.D. Gi.Fra. Milazzo - Gestione Sportiva</title>
