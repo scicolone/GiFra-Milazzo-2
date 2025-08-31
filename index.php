@@ -18,7 +18,7 @@
 
         <div class="card">
             <h2 class="card-title">MODULISTICA</h2>
-            <a href="moduli/modulistica/visita_ideoneita.php" class="btn">RICHIESTA VISITA IDONEITÀ</a>
+            <a href="moduli/modulistica/visita_idoneita.php" class="btn">RICHIESTA VISITA IDONEITÀ</a>
             <a href="moduli/modulistica/lettera_scuola.php" class="btn">LETTERA SCUOLA</a>
             <a href="moduli/modulistica/visita_specialistica.php" class="btn">VISITA SPECIALISTICA</a>
             <a href="moduli/modulistica/lettera_convocazione.php" class="btn">LETTERA CONVOCAZIONE</a>
