@@ -9,7 +9,7 @@
             <a href="moduli/stagioni.php" class="btn">CREA NUOVA STAGIONE</a>
             <a href="moduli/cambio_stagione.php" class="btn">CAMBIO STAGIONE</a>
         </div>
-
+ 
         <div class="card">
             <h2 class="card-title">GESTIONE DISTINTE</h2>
             <a href="moduli/distinte/nuova_distinta.php" class="btn">NUOVA DISTINTA GARA</a>
