@@ -14,34 +14,10 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
     <meta charset="UTF-8">
     <title>A.S.D. Gi.Fra. Milazzo - Gestione Sportiva</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="icon" href="../img/logo.png">
-    <style>
-        .logo {
-            width: 120px;
-            height: auto;
-            display: inline-block;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-        .brand-title {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #d32f2f;
-            margin: 0;
-        }
-        .season-text {
-            color: #666;
-            font-size: 0.9rem;
-            margin: 0;
-        }
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="img/logo.png">
 </head>
+
 <body>
 <header class="bg-light py-3 border-bottom">
     <div class="container">
