@@ -1,12 +1,5 @@
 <?php include 'include/header.php'; ?>
 
-<?php
-session_start();
-if (!isset($_SESSION['utente_id']) || $_SESSION['ruolo'] !== 'presidente') {
-    die("Accesso negato. Solo il Presidente può accedere.");
-}
-?>
-
 <div class="row">
     <!-- Colonna sinistra -->
     <div class="col-md-8">
