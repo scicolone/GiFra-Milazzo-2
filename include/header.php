@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'config.php';
+include '/home/mhd-01/www.giovannicusumano.it/htdocs/GiFra-Milazzo-2/config.php';
 
 // Recupera la stagione attiva
 $stmt = $pdo->query("SELECT anno_inizio, anno_fine FROM stagioni WHERE attiva = TRUE LIMIT 1");
