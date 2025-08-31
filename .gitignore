@@ -1,0 +1,21 @@
+# Ignora file di configurazione con password
+.env
+config.php
+database.php
+
+# Cartelle di librerie PHP
+/vendor/
+
+# File temporanei del sistema
+.DS_Store
+Thumbs.db
+
+# Cache e log
+cache/
+logs/
+*.log
+
+# Editor
+.vscode/
+*.swp
+*~
