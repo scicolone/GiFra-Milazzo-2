@@ -1,10 +1,4 @@
 <?php
-if (!file_exists('../config.php')) {
-    die("Errore: config.php non trovato! Verifica il percorso.");
-}
-include '../config.php';
-?>
-<?php
 session_start();
 include 'config.php';
 
