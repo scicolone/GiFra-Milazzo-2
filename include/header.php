@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-include dirname(__DIR__) . 'GiFra-Milazzo-2/config.php';
+include dirname(__DIR__) . '/config.php';
 
 // Recupera la stagione attiva
 $stmt = $pdo->query("SELECT anno_inizio, anno_fine FROM stagioni WHERE attiva = TRUE LIMIT 1");
