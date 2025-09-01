@@ -1,10 +1,7 @@
 <?php
 session_start();
-// Verifica che config.php esista e lo include
-if (!file_exists(dirname(__DIR__) . '/config.php')) {
-    die("Errore critico: file config.php non trovato nella root del progetto.");
-}
-include dirname(__DIR__) . '/config.php';
+
+include dirname(__DIR__) . 'GiFra-Milazzo-2/config.php';
 
 // Recupera la stagione attiva
 $stmt = $pdo->query("SELECT anno_inizio, anno_fine FROM stagioni WHERE attiva = TRUE LIMIT 1");
