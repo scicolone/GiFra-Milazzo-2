@@ -34,6 +34,15 @@
     background-color: #1565c0;
 }
 
+.btn-secondary {
+    background-color: #b0bec5;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background-color: #90a4ae;
+}
+
 .menu-stampe {
     background-color: #fdd835;
     color: #333;
