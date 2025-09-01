@@ -1,4 +1,6 @@
+<?php
 include dirname(__DIR__) . 'include/header.php';
+?>
 
 <div class="card">
     <h2 class="card-title">Richiesta Visita Idoneità</h2>
