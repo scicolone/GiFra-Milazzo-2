@@ -6,10 +6,10 @@
         <div class="card">
             <h2 class="card-title">TABELLE FUNZIONALITÀ GENERALI</h2>
             <a href="moduli/categorie.php" class="btn">TABELLA CATEGORIE</a>
-            <a href="moduli/stagioni.php" class="btn">CREA NUOVA STAGIONE</a>
+            <a href="moduli/stagioni.php" class="btn">TABELLA STAGIONI</a>
             <a href="moduli/cambio_stagione.php" class="btn">CAMBIO STAGIONE</a>
         </div>
- 
+
         <div class="card">
             <h2 class="card-title">GESTIONE DISTINTE</h2>
             <a href="moduli/distinte/nuova_distinta.php" class="btn">NUOVA DISTINTA GARA</a>
@@ -18,7 +18,7 @@
 
         <div class="card">
             <h2 class="card-title">MODULISTICA</h2>
-            <a href="moduli/modulistica/visita_idoneita.php" class="btn">RICHIESTA VISITA IDONEITÀ</a>
+            <a href="moduli/modulistica/visita_ideoneita.php" class="btn">RICHIESTA VISITA IDONEITÀ</a>
             <a href="moduli/modulistica/lettera_scuola.php" class="btn">LETTERA SCUOLA</a>
             <a href="moduli/modulistica/visita_specialistica.php" class="btn">VISITA SPECIALISTICA</a>
             <a href="moduli/modulistica/lettera_convocazione.php" class="btn">LETTERA CONVOCAZIONE</a>
