@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>A.S.D. Gi.Fra. Milazzo - Gestione Sportiva</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="img/logo.png">
     <style>
         body {
             background-color: #f5f5f5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
         }
         .header {
             background-color: #1976d2;
@@ -35,11 +35,6 @@
             color: #eee;
             font-size: 0.9rem;
             margin: 5px 0 0;
-        }
-        .menu-container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
         }
         .card {
             background: white;
@@ -113,7 +108,7 @@
 <a href="auth/login.php" class="login-btn">Login</a>
 
 <!-- Menu Principale -->
-<div class="menu-container">
+<div class="container mt-4">
     <div class="row">
         <!-- Colonna sinistra -->
         <div class="col-md-8">
@@ -172,8 +167,11 @@
     </div>
 </div>
 
-<footer class="text-center py-3 text-muted">
+<footer class="text-center py-3 text-muted mt-4">
     &copy; 2025 A.S.D. Gi.Fra. Milazzo - Tutti i diritti riservati
 </footer>
+
+<!-- Bootstrap JS (opzionale) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
