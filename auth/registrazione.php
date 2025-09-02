@@ -5,54 +5,6 @@ require_once '../config.php';
 $success = '';
 $error = '';
 
-// Funzione per generare codice fiscale
-function generateCodiceFiscale($nome, $cognome, $data_nascita, $sesso, $luogo_nascita) {
-    $nome = strtoupper($nome);
-    $cognome = strtoupper($cognome);
-    $luogo_nascita = strtoupper($luogo_nascita);
-    
-    // Cognome: 3 consonanti/vocali
-    $vocali = ['A', 'E', 'I', 'O', 'U'];
-    $consonanti_cognome = [];
-    $vocali_cognome = '';
-    for ($i = 0; $i < strlen($cognome); $i++) {
-        $char = $cognome[$i];
-        if (in_array($char, $vocali)) {
-            $vocali_cognome .= $char;
-        } else {
-            $consonanti_cognome[] = $char;
-        }
-    }
-    $cognome_cf = substr(implode('', $consonanti_cognome) . $vocali_cognome . 'XXX', 0, 3);
-    
-    // Nome: 3 consonanti/vocali
-    $consonanti_nome = [];
-    $vocali_nome = '';
-    for ($i = 0; $i < strlen($nome); $i++) {
-        $char = $nome[$i];
-        if (in_array($char, $vocali)) {
-            $vocali_nome .= $char;
-        } else {
-            $consonanti_nome[] = $char;
-        }
-    }
-    $nome_cf = substr(implode('', $consonanti_nome) . $vocali_nome . 'XXX', 0, 3);
-    
-    // Data di nascita
-    $anno = substr(date('Y', strtotime($data_nascita)), -2);
-    $mese = ['A', 'B', 'C', 'D', 'E', 'H', 'L', 'M', 'P', 'R', 'S', 'T'][date('n', strtotime($data_nascita)) - 1];
-    $giorno = (int)date('j', strtotime($data_nascita));
-    if ($sesso === 'F') {
-        $giorno += 40;
-    }
-    $giorno_cf = str_pad($giorno, 2, '0', STR_PAD_LEFT);
-    
-    // Luogo di nascita (semplificato)
-    $luogo_cf = substr($luogo_nascita . 'XXX', 0, 4);
-    
-    return $cognome_cf . $nome_cf . $anno . $mese . $giorno_cf . $luogo_cf;
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'];
     $cognome = $_POST['cognome'];
@@ -143,6 +95,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: 20px;
             margin-bottom: 15px;
         }
+        .autocomplete-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            display: none;
+        }
+        .autocomplete-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .autocomplete-item:hover {
+            background-color: #f0f0f0;
+        }
+        .position-relative {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -173,10 +146,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-6 position-relative">
                 <div class="mb-3">
                     <label for="luogo_nascita" class="form-label">Luogo di Nascita</label>
                     <input type="text" name="luogo_nascita" id="luogo_nascita" class="form-control" required>
+                    <div id="luogo_suggestions" class="autocomplete-suggestions"></div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -215,10 +189,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Residenza -->
         <h4 class="section-title">Residenza</h4>
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-6 position-relative">
                 <div class="mb-3">
                     <label for="comune_residenza" class="form-label">Comune di Residenza</label>
                     <input type="text" name="comune_residenza" id="comune_residenza" class="form-control" required>
+                    <div id="comune_suggestions" class="autocomplete-suggestions"></div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -313,12 +288,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-// Autocompilazione provincia di nascita e codice fiscale
-document.getElementById('luogo_nascita').addEventListener('blur', function() {
-    const luogo = this.value;
-    if (luogo.length > 0) {
-        // Simulazione - in produzione usa AJAX
-        const province = {
-            'MILAZZO': 'ME',
-            'MESSINA': 'ME',
-            'PALERMO': 'PA
+// Funzione per mostrare suggerimenti
+function showSuggestions(inputId, suggestionsId, url, onSelectCallback) {
+    const input = document.getElementById(inputId);
+    const suggestions = document.getElementById(suggestionsId);
+    
+    input.addEventListener('input', function() {
+        const term = this.value;
+        if (term.length < 2) {
+            suggestions.style.display = 'none';
+            return;
+        }
+        
+        fetch(url + '?term=' + encodeURIComponent(term))
+            .then(response => response.json())
+            .then(data => {
+                suggestions.innerHTML = '';
+                if (data.length > 0) {
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'autocomplete-item';
+                        div.textContent = `${item.nome} (${item.provincia}, ${item.cap})`;
+                        div.onclick = function() {
+                            input.value = item.nome;
+                            onSelectCallback(item);
+                            suggestions.style.display = 'none';
+                        };
+                        suggestions.appendChild(div);
+                    });
+                    suggestions.style.display = 'block';
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            });
+    });
+    
+    // Nascondi suggerimenti quando si clicca fuori
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.style.display = 'none';
+        }
+    });
+}
+
+// Callback per selezione luogo di nascita
+function onSelectLuogo(item) {
+    document.getElementById('provincia_nascita').value = item.provincia;
+    updateCodiceFiscale();
+}
+
+// Callback per selezione comune di residenza
+function onSelectComune(item) {
+    document.getElementById('provincia_residenza').value = item.provincia;
+    document.getElementById('cap').value = item.cap;
+}
+
+// Inizializza suggerimenti
+showSuggestions('luogo_nascita', 'luogo_suggestions', 'ajax/get_dati_comune.php', onSelectLuogo);
+showSuggestions('comune_residenza', 'comune_suggestions', 'ajax/get_dati_comune.php', onSelectComune);
+
+// Funzione per aggiornare codice fiscale
+function updateCodiceFiscale() {
+    const nome = document.getElementById('nome').value;
+    const cognome = document.getElementById('cognome').value;
+    const luogo = document.getElementById('luogo_nascita').value;
+    const data = document.getElementById('data_nascita').value;
+    const sesso = document.getElementById('sesso').value;
+    
+    if (nome && cognome && luogo && data && sesso) {
+        const cf = generateSimpleCF(cognome, nome, data, sesso, luogo);
+        document.getElementById('codice_fiscale').value = cf;
+    }
+}
+
+// Event listeners per aggiornare codice fiscale
+document.getElementById('nome').addEventListener('input', updateCodiceFiscale);
+document.getElementById('cognome').addEventListener('input', updateCodiceFiscale);
+document.getElementById('data_nascita').addEventListener('change', updateCodiceFiscale);
+document.getElementById('sesso').addEventListener('change', updateCodiceFiscale);
+document.getElementById('luogo_nascita').addEventListener('input', updateCodiceFiscale);
+
+// Funzione semplificata per generare codice fiscale
+function generateSimpleCF(cognome, nome, data, sesso, luogo) {
+    const cognomePart = cognome.substring(0, 3).toUpperCase().padEnd(3, 'X');
+    const nomePart = nome.substring(0, 3).toUpperCase().padEnd(3, 'X');
+    const anno = data.substring(2, 4);
+    const mese = ['A', 'B', 'C', 'D', 'E', 'H', 'L', 'M', 'P', 'R', 'S', 'T'][parseInt(data.substring(5, 7)) - 1];
+    const giorno = sesso === 'F' ? (parseInt(data.substring(8, 10)) + 40).toString().padStart(2, '0') : data.substring(8, 10);
+    const luogoPart = luogo.substring(0, 4).toUpperCase().padEnd(4, 'X');
+    
+    return cognomePart + nomePart + anno + mese + giorno + luogoPart;
+}
+</script>
+</body>
+</html>
