@@ -1,25 +1,28 @@
 <?php
-header('Content-Type: application/json');
 require_once '../config.php';
 
-$term = $_GET['term'] ?? '';
+header('Content-Type: application/json');
 
-if (empty($term)) {
+if (!isset($_GET['term']) || strlen($_GET['term']) < 2) {
     echo json_encode([]);
     exit;
 }
 
-// Cerca comuni che contengono il termine
-$stmt = $pdo->prepare("
-    SELECT nome, provincia, cap 
-    FROM comuni 
-    WHERE nome LIKE ? 
-    ORDER BY nome 
-    LIMIT 10
-");
-$searchTerm = '%' . $term . '%';
-$stmt->execute([$searchTerm]);
-$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$term = $_GET['term'] . '%';
 
-echo json_encode($results);
+try {
+    $stmt = $pdo->prepare("
+        SELECT nome, provincia, cap, codice_catastale 
+        FROM comuni 
+        WHERE nome LIKE ? 
+        ORDER BY nome ASC 
+        LIMIT 10
+    ");
+    $stmt->execute([$term]);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo json_encode($results);
+} catch (PDOException $e) {
+    echo json_encode([]);
+}
 ?>
