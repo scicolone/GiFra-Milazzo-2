@@ -13,30 +13,30 @@ function generateCodiceFiscale($nome, $cognome, $data_nascita, $sesso, $luogo_na
     
     // Cognome: 3 consonanti/vocali
     $vocali = ['A', 'E', 'I', 'O', 'U'];
-    $consonanti = [];
+    $consonanti_cognome = [];
     $vocali_cognome = '';
     for ($i = 0; $i < strlen($cognome); $i++) {
         $char = $cognome[$i];
         if (in_array($char, $vocali)) {
             $vocali_cognome .= $char;
         } else {
-            $consonanti[] = $char;
+            $consonanti_cognome[] = $char;
         }
     }
-    $cognome_cf = substr(implode('', $consonanti) . $vocali_cognome . 'XXX', 0, 3);
+    $cognome_cf = substr(implode('', $consonanti_cognome) . $vocali_cognome . 'XXX', 0, 3);
     
     // Nome: 3 consonanti/vocali
-    $consonanti = [];
-    $vocali = '';
+    $consonanti_nome = [];
+    $vocali_nome = '';
     for ($i = 0; $i < strlen($nome); $i++) {
         $char = $nome[$i];
         if (in_array($char, $vocali)) {
-            $vocali .= $char;
+            $vocali_nome .= $char;
         } else {
-            $consonanti[] = $char;
+            $consonanti_nome[] = $char;
         }
     }
-    $nome_cf = substr(implode('', $consonanti) . $vocali . 'XXX', 0, 3);
+    $nome_cf = substr(implode('', $consonanti_nome) . $vocali_nome . 'XXX', 0, 3);
     
     // Data di nascita
     $anno = substr(date('Y', strtotime($data_nascita)), -2);
@@ -47,7 +47,7 @@ function generateCodiceFiscale($nome, $cognome, $data_nascita, $sesso, $luogo_na
     }
     $giorno_cf = str_pad($giorno, 2, '0', STR_PAD_LEFT);
     
-    // Luogo di nascita
+    // Luogo di nascita (semplificato)
     $luogo_cf = substr($luogo_nascita . 'XXX', 0, 4);
     
     return $cognome_cf . $nome_cf . $anno . $mese . $giorno_cf . $luogo_cf;
@@ -67,11 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numero_civico = $_POST['numero_civico'];
     $cittadinanza = $_POST['cittadinanza'];
     $telefono = $_POST['telefono'];
-    $cellulare_madre = $_POST['cellulare_madre'];
-    $cellulare_padre = $_POST['cellulare_padre'];
+    $cellulare = $_POST['cellulare'];
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $tipo_utente = $_POST['tipo_utente'];
+    $codice_fiscale = $_POST['codice_fiscale'];
 
     // Icone per tipo utente
     $icone = [
@@ -84,9 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
     $icona = $icone[$tipo_utente] ?? '👤';
 
-    // Genera codice fiscale
-    $codice_fiscale = generateCodiceFiscale($nome, $cognome, $data_nascita, $sesso, $luogo_nascita);
-
     // Verifica se email già esiste
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM utenti WHERE email = ?");
     $stmt->execute([$email]);
@@ -96,15 +93,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("
             INSERT INTO utenti 
             (nome, cognome, luogo_nascita, provincia_nascita, data_nascita, sesso, comune_residenza, 
-             provincia_residenza, cap, via_piazza, numero_civico, cittadinanza, telefono, cellulare_madre, 
-             cellulare_padre, email, password, tipo_utente, icona, approvato, codice_fiscale) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, ?)
+             provincia_residenza, cap, via_piazza, numero_civico, cittadinanza, telefono, cellulare, 
+             email, password, tipo_utente, icona, approvato, codice_fiscale) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, ?)
         ");
         $stmt->execute([
             $nome, $cognome, $luogo_nascita, $provincia_nascita, $data_nascita, $sesso,
             $comune_residenza, $provincia_residenza, $cap, $via_piazza, $numero_civico,
-            $cittadinanza, $telefono, $cellulare_madre, $cellulare_padre, $email,
-            $password, $tipo_utente, $icona, $codice_fiscale
+            $cittadinanza, $telefono, $cellulare, $email, $password, $tipo_utente, $icona, $codice_fiscale
         ]);
         $success = "Registrazione completata. In attesa di approvazione.";
     }
@@ -147,29 +143,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: 20px;
             margin-bottom: 15px;
         }
-        .input-group {
-            position: relative;
-        }
-        .autocomplete-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            z-index: 1000;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
-        .autocomplete-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-        }
-        .autocomplete-item:hover {
-            background-color: #f0f0f0;
-        }
     </style>
 </head>
 <body>
@@ -187,14 +160,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-3">
-                    <label for="nome" class="form-label">Nome</label>
-                    <input type="text" name="nome" id="nome" class="form-control" required>
+                    <label for="cognome" class="form-label">Cognome</label>
+                    <input type="text" name="cognome" id="cognome" class="form-control" required>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="mb-3">
-                    <label for="cognome" class="form-label">Cognome</label>
-                    <input type="text" name="cognome" id="cognome" class="form-control" required>
+                    <label for="nome" class="form-label">Nome</label>
+                    <input type="text" name="nome" id="nome" class="form-control" required>
                 </div>
             </div>
         </div>
@@ -204,7 +177,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label for="luogo_nascita" class="form-label">Luogo di Nascita</label>
                     <input type="text" name="luogo_nascita" id="luogo_nascita" class="form-control" required>
-                    <div id="luogo_nascita_suggestions" class="autocomplete-suggestions"></div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -221,13 +193,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
         
-        <div class="mb-3">
-            <label for="sesso" class="form-label">Sesso</label>
-            <select name="sesso" id="sesso" class="form-select" required>
-                <option value="">Seleziona...</option>
-                <option value="M">Maschio</option>
-                <option value="F">Femmina</option>
-            </select>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="sesso" class="form-label">Sesso</label>
+                    <select name="sesso" id="sesso" class="form-select" required>
+                        <option value="">Seleziona...</option>
+                        <option value="M">Maschio</option>
+                        <option value="F">Femmina</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="codice_fiscale" class="form-label">Codice Fiscale</label>
+                    <input type="text" name="codice_fiscale" id="codice_fiscale" class="form-control" readonly>
+                </div>
+            </div>
         </div>
         
         <!-- Residenza -->
@@ -237,7 +219,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label for="comune_residenza" class="form-label">Comune di Residenza</label>
                     <input type="text" name="comune_residenza" id="comune_residenza" class="form-control" required>
-                    <div id="comune_residenza_suggestions" class="autocomplete-suggestions"></div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -285,21 +266,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="col-md-4">
                 <div class="mb-3">
-                    <label for="cellulare_madre" class="form-label">Cellulare Madre</label>
-                    <input type="text" name="cellulare_madre" id="cellulare_madre" class="form-control">
+                    <label for="cellulare" class="form-label">Cellulare</label>
+                    <input type="text" name="cellulare" id="cellulare" class="form-control">
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="mb-3">
-                    <label for="cellulare_padre" class="form-label">Cellulare Padre</label>
-                    <input type="text" name="cellulare_padre" id="cellulare_padre" class="form-control">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" name="email" id="email" class="form-control" required>
                 </div>
             </div>
-        </div>
-        
-        <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" name="email" id="email" class="form-control" required>
         </div>
         
         <div class="mb-3">
@@ -324,57 +300,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <button type="submit" class="btn btn-success w-100">Registrati</button>
     </form>
+    
+    <!-- Pulsanti Indietro e Home -->
+    <div class="mt-4 text-center">
+        <a href="javascript:history.back()" class="btn btn-secondary">← Indietro</a>
+        <a href="../index.php" class="btn btn-primary">🏠 Torna alla Home</a>
+    </div>
+    
     <div class="mt-3 text-center">
         <a href="login.php">Hai già un account? Accedi</a>
     </div>
 </div>
 
 <script>
-// Funzione per caricare suggerimenti
-function loadSuggestions(inputId, suggestionsId, url) {
-    const input = document.getElementById(inputId);
-    const suggestions = document.getElementById(suggestionsId);
-    
-    input.addEventListener('input', function() {
-        const value = this.value;
-        if (value.length < 2) {
-            suggestions.style.display = 'none';
-            return;
-        }
-        
-        fetch(url + '?comune=' + value)
-            .then(response => response.json())
-            .then(data => {
-                suggestions.innerHTML = '';
-                if (data.provincia && data.cap) {
-                    const item = document.createElement('div');
-                    item.className = 'autocomplete-item';
-                    item.textContent = `${value} (${data.provincia}, ${data.cap})`;
-                    item.onclick = function() {
-                        input.value = value;
-                        document.getElementById('provincia_nascita').value = data.provincia;
-                        document.getElementById('cap').value = data.cap;
-                        suggestions.style.display = 'none';
-                    };
-                    suggestions.appendChild(item);
-                }
-                suggestions.style.display = 'block';
-            });
-    });
-    
-    // Nascondi suggerimenti al clic fuori
-    document.addEventListener('click', function(e) {
-        if (!input.contains(e.target) && !suggestions.contains(e.target)) {
-            suggestions.style.display = 'none';
-        }
-    });
-}
-
-// Carica suggerimenti per luogo di nascita
-loadSuggestions('luogo_nascita', 'luogo_nascita_suggestions', 'ajax/get_comune.php');
-
-// Carica suggerimenti per comune di residenza
-loadSuggestions('comune_residenza', 'comune_residenza_suggestions', 'ajax/get_comune.php');
-</script>
-</body>
-</html>
+// Autocompilazione provincia di nascita e codice fiscale
+document.getElementById('luogo_nascita').addEventListener('blur', function() {
+    const luogo = this.value;
+    if (luogo.length > 0) {
+        // Simulazione - in produzione usa AJAX
+        const province = {
+            'MILAZZO': 'ME',
+            'MESSINA': 'ME',
+            'PALERMO': 'PA
