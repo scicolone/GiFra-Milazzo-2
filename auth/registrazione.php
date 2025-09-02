@@ -93,6 +93,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: 20px;
             margin-bottom: 15px;
         }
+        .autocomplete-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            display: none;
+        }
+        .autocomplete-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .autocomplete-item:hover {
+            background-color: #f0f0f0;
+        }
+        .position-relative {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -123,10 +144,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-6 position-relative">
                 <div class="mb-3">
                     <label for="luogo_nascita" class="form-label">Luogo di Nascita</label>
                     <input type="text" name="luogo_nascita" id="luogo_nascita" class="form-control" required>
+                    <div id="luogo_suggestions" class="autocomplete-suggestions"></div>
+                    <input type="hidden" id="codice_catastale_nascita" value="">
                 </div>
             </div>
             <div class="col-md-3">
@@ -165,10 +188,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Residenza -->
         <h4 class="section-title">Residenza</h4>
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-6 position-relative">
                 <div class="mb-3">
                     <label for="comune_residenza" class="form-label">Comune di Residenza</label>
                     <input type="text" name="comune_residenza" id="comune_residenza" class="form-control" required>
+                    <div id="comune_suggestions" class="autocomplete-suggestions"></div>
+                    <input type="hidden" id="codice_catastale_residenza" value="">
                 </div>
             </div>
             <div class="col-md-3">
@@ -263,8 +288,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-// Funzione per autocompletare dati dal database
-function autocompleteComune(inputId, provinciaId, capId = null, codiceCatastaleId = null) {
+// Funzione per mostrare suggerimenti
+function showSuggestions(inputId, suggestionsId, url, onSelectCallback) {
+    const input = document.getElementById(inputId);
+    const suggestions = document.getElementById(suggestionsId);
+    
+    let timeout;
+    
+    input.addEventListener('input', function() {
+        clearTimeout(timeout);
+        const term = this.value;
+        
+        if (term.length < 2) {
+            suggestions.style.display = 'none';
+            return;
+        }
+        
+        timeout = setTimeout(() => {
+            fetch(url + '?term=' + encodeURIComponent(term))
+                .then(response => response.json())
+                .then(data => {
+                    suggestions.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'autocomplete-item';
+                            div.textContent = `${item.nome} (${item.provincia}, ${item.cap})`;
+                            div.onclick = function() {
+                                input.value = item.nome;
+                                onSelectCallback(item);
+                                suggestions.style.display = 'none';
+                            };
+                            suggestions.appendChild(div);
+                        });
+                        suggestions.style.display = 'block';
+                    } else {
+                        suggestions.style.display = 'none';
+                    }
+                });
+        }, 300);
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.style.display = 'none';
+        }
+    });
+}
+
+// Callback per selezione luogo di nascita
+function onSelectLuogo(item) {
+    document.getElementById('provincia_nascita').value = item.provincia;
+    document.getElementById('codice_catastale_nascita').value = item.codice_catastale || '';
+    updateCodiceFiscale();
+}
+
+// Callback per selezione comune di residenza
+function onSelectComune(item) {
+    document.getElementById('provincia_residenza').value = item.provincia;
+    document.getElementById('cap').value = item.cap;
+    document.getElementById('codice_catastale_residenza').value = item.codice_catastale || '';
+}
+
+// Inizializza suggerimenti
+showSuggestions('luogo_nascita', 'luogo_suggestions', 'ajax/search_comuni.php', onSelectLuogo);
+showSuggestions('comune_residenza', 'comune_suggestions', 'ajax/search_comuni.php', onSelectComune);
+
+// Funzione per autocompletare dati quando si esce dal campo
+function autocompleteField(inputId, provinciaId, capId = null) {
     document.getElementById(inputId).addEventListener('blur', function() {
         const comune = this.value;
         if (comune.length > 0) {
@@ -276,9 +367,6 @@ function autocompleteComune(inputId, provinciaId, capId = null, codiceCatastaleI
                     }
                     if (capId && data.cap) {
                         document.getElementById(capId).value = data.cap;
-                    }
-                    if (codiceCatastaleId && data.codice_catastale) {
-                        document.getElementById(codiceCatastaleId).value = data.codice_catastale;
                     }
                     updateCodiceFiscale();
                 });
@@ -295,35 +383,31 @@ function updateCodiceFiscale() {
     const luogo = document.getElementById('luogo_nascita').value;
     
     if (nome && cognome && data && sesso && luogo) {
-        // Prima ottieni il codice catastale
+        // Ottieni il codice catastale
         fetch('ajax/get_comune_data.php?term=' + encodeURIComponent(luogo))
             .then(response => response.json())
             .then(data => {
                 if (data.codice_catastale) {
-                    // Poi genera il codice fiscale
-                    const params = new URLSearchParams({
-                        nome: nome,
-                        cognome: cognome,
-                        data: data_nascita,
-                        sesso: sesso,
-                        codice_catastale: data.codice_catastale
-                    });
-                    
-                    fetch('ajax/generate_cf.php?' + params)
-                        .then(response => response.text())
-                        .then(cf => {
-                            document.getElementById('codice_fiscale').value = cf;
-                        });
+                    const cf = generateSimpleCF(cognome, nome, data, sesso, data.codice_catastale);
+                    document.getElementById('codice_fiscale').value = cf;
                 }
             });
     }
 }
 
-// Inizializza autocompletamento
-autocompleteComune('luogo_nascita', 'provincia_nascita');
-autocompleteComune('comune_residenza', 'provincia_residenza', 'cap');
+// Funzione semplificata per generare codice fiscale
+function generateSimpleCF(cognome, nome, data_nascita, sesso, codice_catastale) {
+    const cognomePart = cognome.substring(0, 3).toUpperCase().padEnd(3, 'X');
+    const nomePart = nome.substring(0, 3).toUpperCase().padEnd(3, 'X');
+    const anno = data_nascita.substring(2, 4);
+    const mese = ['A', 'B', 'C', 'D', 'E', 'H', 'L', 'M', 'P', 'R', 'S', 'T'][parseInt(data_nascita.substring(5, 7)) - 1];
+    const giorno = sesso === 'F' ? (parseInt(data_nascita.substring(8, 10)) + 40).toString().padStart(2, '0') : data_nascita.substring(8, 10);
+    const comunePart = codice_catastale.substring(0, 4).toUpperCase().padEnd(4, 'X');
+    
+    return cognomePart + nomePart + anno + mese + giorno + comunePart + 'X';
+}
 
-// Event listeners per codice fiscale
+// Event listeners
 document.getElementById('nome').addEventListener('input', updateCodiceFiscale);
 document.getElementById('cognome').addEventListener('input', updateCodiceFiscale);
 document.getElementById('data_nascita').addEventListener('change', updateCodiceFiscale);
