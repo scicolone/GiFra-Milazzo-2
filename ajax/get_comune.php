@@ -1,24 +1,32 @@
 <?php
 header('Content-Type: application/json');
-require_once '../config.php';
 
-$comune = $_GET['comune'] ?? '';
+$term = $_GET['term'] ?? '';
+$tipo = $_GET['tipo'] ?? 'comune'; // 'comune' o 'luogo'
 
-if (empty($comune)) {
-    echo json_encode(['provincia' => '', 'cap' => '']);
+if (empty($term)) {
+    echo json_encode([]);
     exit;
 }
 
-// Simulazione dati comuni (in produzione usa una tabella o API)
-$comuni = [
-    'Milazzo' => ['provincia' => 'ME', 'cap' => '98056'],
-    'Messina' => ['provincia' => 'ME', 'cap' => '98100'],
-    'Palermo' => ['provincia' => 'PA', 'cap' => '90133'],
-    'Catania' => ['provincia' => 'CT', 'cap' => '95123']
+// Dati di esempio - in produzione usa database
+$dati = [
+    ['nome' => 'Milazzo', 'provincia' => 'ME', 'cap' => '98056'],
+    ['nome' => 'Messina', 'provincia' => 'ME', 'cap' => '98100'],
+    ['nome' => 'Palermo', 'provincia' => 'PA', 'cap' => '90100'],
+    ['nome' => 'Catania', 'provincia' => 'CT', 'cap' => '95100'],
+    ['nome' => 'Roma', 'provincia' => 'RM', 'cap' => '00100'],
+    ['nome' => 'Milano', 'provincia' => 'MI', 'cap' => '20100']
 ];
 
-$comune = strtoupper($comune);
-$result = $comuni[$comune] ?? ['provincia' => '', 'cap' => ''];
+$results = [];
+$term = strtoupper($term);
 
-echo json_encode($result);
+foreach ($dati as $dato) {
+    if (strpos(strtoupper($dato['nome']), $term) !== false) {
+        $results[] = $dato;
+    }
+}
+
+echo json_encode($results);
 ?>
