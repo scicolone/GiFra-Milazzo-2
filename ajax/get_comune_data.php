@@ -3,20 +3,23 @@ header('Content-Type: application/json');
 require_once '../config.php';
 
 $term = $_GET['term'] ?? '';
+$type = $_GET['type'] ?? 'nascita';
 
 if (empty($term)) {
     echo json_encode(['provincia' => '', 'cap' => '', 'codice_catastale' => '']);
     exit;
 }
 
-// Cerca il comune esatto (case insensitive)
+// Cerca comuni che iniziano con il termine (case insensitive)
 $stmt = $pdo->prepare("
     SELECT provincia, cap, codice_catastale 
     FROM comuni 
-    WHERE UPPER(nome) = UPPER(?)
+    WHERE nome LIKE ? 
+    ORDER BY nome 
     LIMIT 1
 ");
-$stmt->execute([$term]);
+$searchTerm = $term . '%';
+$stmt->execute([$searchTerm]);
 $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($result) {
