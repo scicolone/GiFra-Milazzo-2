@@ -5,44 +5,40 @@ require_once '../config.php';
 $success = '';
 $error = '';
 
-// Funzione per generare un codice fiscale semplificato
+// Funzione per generare codice fiscale
 function generateCodiceFiscale($nome, $cognome, $data_nascita, $sesso, $luogo_nascita) {
     $nome = strtoupper($nome);
     $cognome = strtoupper($cognome);
     $luogo_nascita = strtoupper($luogo_nascita);
     
-    // Estrai vocali e consonanti
+    // Cognome: 3 consonanti/vocali
     $vocali = ['A', 'E', 'I', 'O', 'U'];
-    
-    // Per cognome: 3 consonanti o consonanti+vocali
-    $cognome_consonanti = '';
-    $cognome_vocali = '';
+    $consonanti = [];
+    $vocali_cognome = '';
     for ($i = 0; $i < strlen($cognome); $i++) {
         $char = $cognome[$i];
         if (in_array($char, $vocali)) {
-            $cognome_vocali .= $char;
+            $vocali_cognome .= $char;
         } else {
-            $cognome_consonanti .= $char;
+            $consonanti[] = $char;
         }
     }
+    $cognome_cf = substr(implode('', $consonanti) . $vocali_cognome . 'XXX', 0, 3);
     
-    $cognome_cf = substr($cognome_consonanti . $cognome_vocali . 'XXX', 0, 3);
-    
-    // Per nome: 3 consonanti o consonanti+vocali
-    $nome_consonanti = '';
-    $nome_vocali = '';
+    // Nome: 3 consonanti/vocali
+    $consonanti = [];
+    $vocali = '';
     for ($i = 0; $i < strlen($nome); $i++) {
         $char = $nome[$i];
         if (in_array($char, $vocali)) {
-            $nome_vocali .= $char;
+            $vocali .= $char;
         } else {
-            $nome_consonanti .= $char;
+            $consonanti[] = $char;
         }
     }
+    $nome_cf = substr(implode('', $consonanti) . $vocali . 'XXX', 0, 3);
     
-    $nome_cf = substr($nome_consonanti . $nome_vocali . 'XXX', 0, 3);
-    
-    // Data di nascita e sesso
+    // Data di nascita
     $anno = substr(date('Y', strtotime($data_nascita)), -2);
     $mese = ['A', 'B', 'C', 'D', 'E', 'H', 'L', 'M', 'P', 'R', 'S', 'T'][date('n', strtotime($data_nascita)) - 1];
     $giorno = (int)date('j', strtotime($data_nascita));
@@ -51,8 +47,8 @@ function generateCodiceFiscale($nome, $cognome, $data_nascita, $sesso, $luogo_na
     }
     $giorno_cf = str_pad($giorno, 2, '0', STR_PAD_LEFT);
     
-    // Luogo di nascita (semplificato)
-    $luogo_cf = substr(strtoupper($luogo_nascita) . 'XXX', 0, 4);
+    // Luogo di nascita
+    $luogo_cf = substr($luogo_nascita . 'XXX', 0, 4);
     
     return $cognome_cf . $nome_cf . $anno . $mese . $giorno_cf . $luogo_cf;
 }
@@ -151,6 +147,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: 20px;
             margin-bottom: 15px;
         }
+        .input-group {
+            position: relative;
+        }
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .autocomplete-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .autocomplete-item:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
@@ -185,12 +204,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label for="luogo_nascita" class="form-label">Luogo di Nascita</label>
                     <input type="text" name="luogo_nascita" id="luogo_nascita" class="form-control" required>
+                    <div id="luogo_nascita_suggestions" class="autocomplete-suggestions"></div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="mb-3">
                     <label for="provincia_nascita" class="form-label">Provincia di Nascita</label>
-                    <input type="text" name="provincia_nascita" id="provincia_nascita" class="form-control" required>
+                    <input type="text" name="provincia_nascita" id="provincia_nascita" class="form-control" readonly>
                 </div>
             </div>
             <div class="col-md-3">
@@ -217,18 +237,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label for="comune_residenza" class="form-label">Comune di Residenza</label>
                     <input type="text" name="comune_residenza" id="comune_residenza" class="form-control" required>
+                    <div id="comune_residenza_suggestions" class="autocomplete-suggestions"></div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="mb-3">
                     <label for="provincia_residenza" class="form-label">Provincia di Residenza</label>
-                    <input type="text" name="provincia_residenza" id="provincia_residenza" class="form-control" required>
+                    <input type="text" name="provincia_residenza" id="provincia_residenza" class="form-control" readonly>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="mb-3">
                     <label for="cap" class="form-label">CAP</label>
-                    <input type="text" name="cap" id="cap" class="form-control" required>
+                    <input type="text" name="cap" id="cap" class="form-control" readonly>
                 </div>
             </div>
         </div>
@@ -309,21 +330,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-// Script per autocompletamento (esempio semplificato)
-document.getElementById('comune_residenza').addEventListener('input', function() {
-    const comune = this.value;
-    if (comune.length > 2) {
-        // Qui andrebbe una chiamata AJAX a un servizio che restituisce provincia e CAP
-        // Per ora usiamo valori di esempio
-        if (comune.toLowerCase().includes('milazzo')) {
-            document.getElementById('provincia_residenza').value = 'ME';
-            document.getElementById('cap').value = '98056';
-        } else if (comune.toLowerCase().includes('messina')) {
-            document.getElementById('provincia_residenza').value = 'ME';
-            document.getElementById('cap').value = '98100';
+// Funzione per caricare suggerimenti
+function loadSuggestions(inputId, suggestionsId, url) {
+    const input = document.getElementById(inputId);
+    const suggestions = document.getElementById(suggestionsId);
+    
+    input.addEventListener('input', function() {
+        const value = this.value;
+        if (value.length < 2) {
+            suggestions.style.display = 'none';
+            return;
         }
-    }
-});
+        
+        fetch(url + '?comune=' + value)
+            .then(response => response.json())
+            .then(data => {
+                suggestions.innerHTML = '';
+                if (data.provincia && data.cap) {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.textContent = `${value} (${data.provincia}, ${data.cap})`;
+                    item.onclick = function() {
+                        input.value = value;
+                        document.getElementById('provincia_nascita').value = data.provincia;
+                        document.getElementById('cap').value = data.cap;
+                        suggestions.style.display = 'none';
+                    };
+                    suggestions.appendChild(item);
+                }
+                suggestions.style.display = 'block';
+            });
+    });
+    
+    // Nascondi suggerimenti al clic fuori
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.style.display = 'none';
+        }
+    });
+}
+
+// Carica suggerimenti per luogo di nascita
+loadSuggestions('luogo_nascita', 'luogo_nascita_suggestions', 'ajax/get_comune.php');
+
+// Carica suggerimenti per comune di residenza
+loadSuggestions('comune_residenza', 'comune_residenza_suggestions', 'ajax/get_comune.php');
 </script>
 </body>
 </html>
