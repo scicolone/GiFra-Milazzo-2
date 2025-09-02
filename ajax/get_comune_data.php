@@ -2,6 +2,7 @@
 require_once '../config.php';
 
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
 
 if (!isset($_GET['term'])) {
     echo json_encode(['error' => 'Missing parameter']);
