@@ -1,17 +1,24 @@
 <?php
-require_once '../config.php';
-
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-if (!isset($_GET['term'])) {
-    echo json_encode(['error' => 'Missing parameter']);
-    exit;
-}
-
-$term = $_GET['term'];
+// Connessione diretta al database
+$host = 'm-51.th.seeweb.it';
+$dbname = 'giovanni90252';
+$username = 'giovanni90252';
+$password = 'tua_password'; // Inserisci la password corretta
 
 try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    if (!isset($_GET['term'])) {
+        echo json_encode(['error' => 'Missing parameter']);
+        exit;
+    }
+    
+    $term = $_GET['term'];
+    
     $stmt = $pdo->prepare("
         SELECT nome, provincia, cap, codice_catastale 
         FROM comuni 
@@ -26,6 +33,7 @@ try {
     } else {
         echo json_encode(['error' => 'Comune non trovato']);
     }
+    
 } catch (PDOException $e) {
     echo json_encode(['error' => 'Database error']);
 }
