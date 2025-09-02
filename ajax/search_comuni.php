@@ -2,6 +2,7 @@
 require_once '../config.php';
 
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
 
 if (!isset($_GET['term']) || strlen($_GET['term']) < 2) {
     echo json_encode([]);
