@@ -26,14 +26,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $codice_fiscale = $_POST['codice_fiscale'];
 
     $icone = [
-        'segretario' => '👩‍💼',
-        'cassiere' => '💰',
-        'dirigente' => '👨‍💼',
-        'socio' => '👥',
-        'allenatore' => '🏃‍♂️',
-        'genitore' => '👨‍👩‍👧‍👦'
+        'segretario' => 'S',  // Sostituisce 👩‍💼 con "S"
+        'cassiere' => 'C',    // Sostituisce 💰 con "C"
+        'dirigente' => 'D',   // Sostituisce 👨‍💼 con "D"
+        'socio' => 'U',       // Sostituisce 👥 con "U"
+        'allenatore' => 'A',  // Sostituisce 🏃‍♂️ con "A"
+        'genitore' => 'G'     // Sostituisce 👨‍👩‍👧‍👦 con "G"
     ];
-    $icona = $icone[$tipo_utente] ?? '👤';
+    $icona = $icone[$tipo_utente] ?? 'U'; // Default a "U" per utente
 
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM utenti WHERE email = ?");
     $stmt->execute([$email]);
@@ -239,12 +239,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="tipo_utente" class="form-label">Seleziona il tuo ruolo</label>
             <select name="tipo_utente" id="tipo_utente" class="form-select" required>
                 <option value="">Seleziona...</option>
-                <option value="segretario">Segretario (👩‍💼)</option>
-                <option value="cassiere">Cassiere (💰)</option>
-                <option value="dirigente">Dirigente (👨‍💼)</option>
-                <option value="socio">Socio (👥)</option>
-                <option value="allenatore">Allenatore (🏃‍♂️)</option>
-                <option value="genitore">Genitore (👨‍👩‍👧‍👦)</option>
+                <option value="segretario">Segretario (S)</option>
+                <option value="cassiere">Cassiere (C)</option>
+                <option value="dirigente">Dirigente (D)</option>
+                <option value="socio">Socio (U)</option>
+                <option value="allenatore">Allenatore (A)</option>
+                <option value="genitore">Genitore (G)</option>
             </select>
         </div>
         
