@@ -54,7 +54,7 @@
     
     <div class="success-message">
         <p><strong>Registrazione completata.</strong> In attesa di approvazione da parte del Presidente o del Segretario.</p>
-        <p>Sei stato reindirizzato alla Home Page tra 4 secondi...</p>
+        <p>Sei stato reindirizzato alla Home Page tra 7 secondi...</p>
     </div>
 
     <div class="text-center mt-4">
