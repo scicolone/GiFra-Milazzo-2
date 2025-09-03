@@ -63,10 +63,10 @@
 </div>
 
 <script>
-// Reindirizza alla home dopo 4 secondi
+// Reindirizza alla home dopo 7 secondi
 setTimeout(function() {
     window.location.href = '../index.php';
-}, 4000);
+}, 7000);
 </script>
 </body>
 </html>
