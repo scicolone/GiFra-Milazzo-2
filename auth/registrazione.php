@@ -26,14 +26,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $codice_fiscale = $_POST['codice_fiscale'];
 
     $icone = [
-        'segretario' => 'S',  // Sostituisce 👩‍💼 con "S"
-        'cassiere' => 'C',    // Sostituisce 💰 con "C"
-        'dirigente' => 'D',   // Sostituisce 👨‍💼 con "D"
-        'socio' => 'U',       // Sostituisce 👥 con "U"
-        'allenatore' => 'A',  // Sostituisce 🏃‍♂️ con "A"
-        'genitore' => 'G'     // Sostituisce 👨‍👩‍👧‍👦 con "G"
+        'segretario' => 'S',
+        'cassiere' => 'C',
+        'dirigente' => 'D',
+        'socio' => 'U',
+        'allenatore' => 'A',
+        'genitore' => 'G'
     ];
-    $icona = $icone[$tipo_utente] ?? 'U'; // Default a "U" per utente
+    $icona = $icone[$tipo_utente] ?? 'U';
 
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM utenti WHERE email = ?");
     $stmt->execute([$email]);
@@ -52,7 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $comune_residenza, $provincia_residenza, $cap, $via_piazza, $numero_civico,
             $cittadinanza, $telefono, $cellulare, $email, $password, $tipo_utente, $icona, $codice_fiscale
         ]);
-        $success = "Registrazione completata. In attesa di approvazione.";
+        
+        // Reindirizza alla pagina di conferma
+        header("Location: registrazione_conferma.php");
+        exit;
     }
 }
 ?>
@@ -98,9 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="register-container">
     <h2 class="text-center">Registrazione</h2>
-    <?php if ($success): ?>
-        <div class="alert alert-success"><?php echo $success; ?></div>
-    <?php endif; ?>
     <?php if ($error): ?>
         <div class="alert alert-danger"><?php echo $error; ?></div>
     <?php endif; ?>
@@ -255,10 +255,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="mt-4 text-center">
         <a href="javascript:history.back()" class="btn btn-secondary">← Indietro</a>
         <a href="../index.php" class="btn btn-primary">🏠 Torna alla Home</a>
-    </div>
-    
-    <div class="mt-3 text-center">
-        <a href="login.php">Hai già un account? Accedi</a>
     </div>
 </div>
 </body>
