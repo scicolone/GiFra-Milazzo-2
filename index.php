@@ -1,12 +1,33 @@
+<?php
+session_start();
+
+// Verifica che l'utente sia loggato
+if (!isset($_SESSION['utente_id'])) {
+    header("Location: accesso.php");
+    exit;
+}
+
+// Verifica che sia presidente o segretario
+$ruolo = $_SESSION['ruolo'];
+if ($ruolo !== 'presidente' && $ruolo !== 'segretario') {
+    die("Accesso negato. Solo Presidente e Segretario possono accedere alla gestione completa.");
+}
+
+// Recupera dati per l'header
+require_once 'config.php';
+
+// Recupera la stagione attiva
+$stmt = $pdo->query("SELECT anno_inizio, anno_fine FROM stagioni WHERE attiva = TRUE LIMIT 1");
+$stagione_attiva = $stmt->fetch(PDO::FETCH_ASSOC);
+$stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $stagione_attiva['anno_fine'] : 'Nessuna';
+?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <title>A.S.D. Gi.Fra. Milazzo - Gestione Sportiva</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" href="img/logo.png">
     <style>
         body {
             background-color: #f5f5f5;
@@ -101,11 +122,11 @@
 <div class="header">
     <img src="img/logo.png" alt="Logo Gi.Fra. Milazzo" class="logo">
     <h1 class="brand-title mb-0">A.S.D. GI.FRA. MILAZZO</h1>
-    <p class="season-text mb-0">Stagione Attiva: 2025/26</p>
+    <p class="season-text mb-0">Stagione Attiva: <?php echo $stagione_label; ?></p>
 </div>
 
 <!-- Login Button -->
-<a href="auth/login.php" class="login-btn">Login</a>
+<a href="auth/logout.php" class="login-btn">Logout</a>
 
 <!-- Menu Principale -->
 <div class="container mt-4">
@@ -167,11 +188,8 @@
     </div>
 </div>
 
-<footer class="text-center py-3 text-muted mt-4">
+<footer class="text-center py-3 text-muted">
     &copy; 2025 A.S.D. Gi.Fra. Milazzo - Tutti i diritti riservati
 </footer>
-
-<!-- Bootstrap JS (opzionale) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
