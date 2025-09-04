@@ -7,6 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
+    // Verifica utente approvato
     $stmt = $pdo->prepare("SELECT * FROM utenti WHERE email = ? AND approvato = TRUE");
     $stmt->execute([$email]);
     $utente = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -15,7 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['utente_id'] = $utente['id'];
         $_SESSION['nome'] = $utente['nome'];
         $_SESSION['ruolo'] = $utente['ruolo'];
-        header("Location: ../index.php");
+        
+        // Reindirizza in base al ruolo
+        if ($utente['ruolo'] === 'presidente' || $utente['ruolo'] === 'segretario') {
+            header("Location: ../index.php"); // Home page completa
+        } else {
+            // Per ora reindirizza alla home, ma puoi creare pagine specifiche
+            header("Location: ../index.php"); // Da personalizzare per ogni tipo di utente
+        }
         exit;
     } else {
         $error = "Credenziali non valide o utente non approvato.";
@@ -77,7 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit" class="btn-login w-100">Accedi</button>
     </form>
     <div class="mt-3 text-center">
-        <a href="registrazione.php">Non hai un account? Registrati</a>
+        <a href="registrazione.php">Non hai un account? Registrati</a><br>
+        <a href="../accesso.php">← Torna all'accesso</a>
     </div>
 </div>
 </body>
