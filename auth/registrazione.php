@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cellulare = $_POST['cellulare'];
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $tipo_utente = $_POST['tipo_utente'];
+    $tipo_utente = $_POST['tipo_utente']; // Usa questo campo
     $codice_fiscale = $_POST['codice_fiscale'];
 
     $icone = [
@@ -254,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Pulsanti Indietro e Home -->
     <div class="mt-4 text-center">
         <a href="javascript:history.back()" class="btn btn-secondary">← Indietro</a>
-        <a href="../index.php" class="btn btn-primary">🏠 Torna alla Home</a>
+        <a href="../accesso.php" class="btn btn-primary">🏠 Torna all'Accesso</a>
     </div>
 </div>
 </body>
