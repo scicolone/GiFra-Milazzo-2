@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cellulare = $_POST['cellulare'];
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $tipo_utente = $_POST['tipo_utente']; // Usa questo campo
+    $tipo_utente = $_POST['tipo_utente'];
     $codice_fiscale = $_POST['codice_fiscale'];
 
     $icone = [
@@ -239,10 +239,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="tipo_utente" class="form-label">Seleziona il tuo ruolo</label>
             <select name="tipo_utente" id="tipo_utente" class="form-select" required>
                 <option value="">Seleziona...</option>
-                <option value="presidente">Presidente (P)</option>
                 <option value="segretario">Segretario (S)</option>
                 <option value="cassiere">Cassiere (C)</option>
                 <option value="dirigente">Dirigente (D)</option>
+                <option value="socio">Socio (U)</option>
                 <option value="allenatore">Allenatore (A)</option>
                 <option value="genitore">Genitore (G)</option>
             </select>
@@ -254,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Pulsanti Indietro e Home -->
     <div class="mt-4 text-center">
         <a href="javascript:history.back()" class="btn btn-secondary">← Indietro</a>
-        <a href="../accesso.php" class="btn btn-primary">🏠 Torna all'Accesso</a>
+        <a href="../index.php" class="btn btn-primary">🏠 Torna alla Home</a>
     </div>
 </div>
 </body>
