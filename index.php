@@ -8,7 +8,7 @@ if (!isset($_SESSION['utente_id'])) {
 }
 
 // Verifica che sia presidente o segretario
-$tipo_utente = $_SESSION['tipo_utente'];
+$ruolo = $_SESSION['tipo_utente'];
 if ($tipo_utente !== 'presidente' && $tipo_utente !== 'segretario') {
     die("Accesso negato. Solo Presidente e Segretario possono accedere alla gestione completa.");
 }
