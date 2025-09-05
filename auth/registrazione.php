@@ -239,10 +239,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="tipo_utente" class="form-label">Seleziona il tuo ruolo</label>
             <select name="tipo_utente" id="tipo_utente" class="form-select" required>
                 <option value="">Seleziona...</option>
+                <option value="presidente">Presidente (P)</option>
                 <option value="segretario">Segretario (S)</option>
                 <option value="cassiere">Cassiere (C)</option>
                 <option value="dirigente">Dirigente (D)</option>
-                <option value="socio">Socio (U)</option>
                 <option value="allenatore">Allenatore (A)</option>
                 <option value="genitore">Genitore (G)</option>
             </select>
