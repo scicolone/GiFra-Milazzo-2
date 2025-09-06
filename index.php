@@ -21,12 +21,6 @@ $stmt = $pdo->query("SELECT anno_inizio, anno_fine FROM stagioni WHERE attiva = 
 $stagione_attiva = $stmt->fetch(PDO::FETCH_ASSOC);
 $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $stagione_attiva['anno_fine'] : 'Nessuna';
 ?>
-<?php if (isset($_SESSION['tipo_utente']) && ($_SESSION['tipo_utente'] === 'presidente' || $_SESSION['tipo_utente'] === 'segretario')): ?>
-<div class="card">
-    <h2 class="card-title">AMMINISTRAZIONE</h2>
-    <a href="auth/approva_utenti.php" class="btn">APPROVA NUOVI UTENTI</a>
-</div>
-<?php endif; ?>
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -178,6 +172,12 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
                 <a href="moduli/convo.php" class="btn">CONVOCAZIONI</a>
                 <a href="moduli/calendario/partite.php" class="btn">PARTITE - Calend. campionato</a>
             </div>
+            <?php if (isset($_SESSION['tipo_utente']) && ($_SESSION['tipo_utente'] === 'presidente' || $_SESSION['tipo_utente'] === 'segretario')): ?>
+<div class="card">
+    <h2 class="card-title">AMMINISTRAZIONE</h2>
+    <a href="auth/approva_utenti.php" class="btn">APPROVA NUOVI UTENTI</a>
+</div>
+<?php endif; ?>
         </div>
     </div>
     <div class="menu-stampe">
