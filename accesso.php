@@ -70,12 +70,6 @@ session_start();
             Solo Presidente e Segretario possono accedere alla gestione completa.<br>
             Altri utenti registrati avranno accesso alle funzioni specifiche.
         </small>
-        <script>
-// Reindirizza alla home dopo 7 secondi
-setTimeout(function() {
-    window.location.href = '../index.php';
-}, 7000);
-</script>
     </div>
 </div>
 </body>
