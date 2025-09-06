@@ -2,32 +2,34 @@
 session_start();
 require_once '../config.php';
 
-// Verifica che l'utente sia loggato e sia presidente o segretario
+// Verifica che l'utente sia loggato
 if (!isset($_SESSION['utente_id'])) {
     header("Location: login.php");
     exit;
 }
 
-$ruolo = $_SESSION['ruolo'];
-if ($ruolo !== 'presidente' && $ruolo !== 'segretario') {
+// Verifica che sia presidente o segretario
+$tipo_utente = $_SESSION['tipo_utente'] ?? ''; // Usa ?? per sicurezza
+if ($tipo_utente !== 'presidente' && $tipo_utente !== 'segretario') {
     die("Accesso negato. Solo Presidente e Segretario possono approvare utenti.");
 }
 
 // Approvazione utente
 if (isset($_GET['approva'])) {
-    $id_utente = $_GET['approva'];
-    
-    // Se è il segretario, può approvare solo se già approvato dal presidente
-    if ($ruolo === 'segretario') {
-        // Verifica che l'utente sia già stato approvato dal presidente (questo è un esempio semplificato)
-        // In realtà il segretario non dovrebbe vedere utenti non approvati dal presidente
-        // Per ora permettiamo l'approvazione diretta
-    }
+    $id_utente = (int)$_GET['approva']; // Cast a intero per sicurezza
+
+    // Logica opzionale: il segretario potrebbe avere restrizioni diverse
+    // Per ora, sia Presidente che Segretario possono approvare
     
     $stmt = $pdo->prepare("UPDATE utenti SET approvato = TRUE WHERE id = ?");
-    $stmt->execute([$id_utente]);
+    if ($stmt->execute([$id_utente])) {
+        // Messaggio di successo (opzionale)
+        $_SESSION['message'] = "Utente approvato con successo.";
+    } else {
+        $_SESSION['error'] = "Errore durante l'approvazione dell'utente.";
+    }
     
-    // Reindirizza per evitare refresh
+    // Reindirizza per evitare refresh e duplicati
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
@@ -81,14 +83,35 @@ $utenti = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 8px 20px;
             border-radius: 20px;
             font-weight: bold;
+            text-decoration: none; /* Per i link */
+            display: inline-block;
         }
         .btn-approve:hover {
             background: linear-gradient(135deg, #218838, #1e7e34);
             transform: scale(1.05);
+            color: white;
+            text-decoration: none;
         }
         .user-icon {
             font-size: 1.5rem;
             margin-right: 10px;
+        }
+        .alert-custom {
+            position: relative;
+            padding: 1rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+        }
+        .alert-success-custom {
+            color: #0f5132;
+            background-color: #d1e7dd;
+            border-color: #badbcc;
+        }
+        .alert-danger-custom {
+            color: #842029;
+            background-color: #f8d7da;
+            border-color: #f5c2c7;
         }
     </style>
 </head>
@@ -96,9 +119,23 @@ $utenti = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="container">
     <div class="header">
         <h2>Approvazione Utenti</h2>
-        <p>Benvenuto, <?php echo htmlspecialchars($_SESSION['nome']); ?> (<?php echo ucfirst($ruolo); ?>)</p>
+        <p>Benvenuto, <?php echo htmlspecialchars($_SESSION['nome'] ?? 'Utente'); ?> (<?php echo ucfirst(htmlspecialchars($tipo_utente)); ?>)</p>
     </div>
     
+    <?php if (isset($_SESSION['message'])): ?>
+        <div class="alert-custom alert-success-custom">
+            <strong><?php echo htmlspecialchars($_SESSION['message']); ?></strong>
+        </div>
+        <?php unset($_SESSION['message']); ?>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert-custom alert-danger-custom">
+            <strong><?php echo htmlspecialchars($_SESSION['error']); ?></strong>
+        </div>
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
+
     <?php if (empty($utenti)): ?>
         <div class="alert alert-info text-center">
             <strong>Nessun utente in attesa di approvazione.</strong>
@@ -116,10 +153,11 @@ $utenti = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <small><?php echo htmlspecialchars($utente['email']); ?></small>
                     </div>
                     <div class="col-md-3">
-                        <span class="badge bg-primary"><?php echo ucfirst($utente['tipo_utente']); ?></span>
+                        <span class="badge bg-primary"><?php echo ucfirst(htmlspecialchars($utente['tipo_utente'])); ?></span>
                     </div>
                     <div class="col-md-4 text-end">
-                        <a href="?approva=<?php echo $utente['id']; ?>" class="btn-approve">
+                        <a href="?approva=<?php echo (int)$utente['id']; ?>" class="btn-approve" 
+                           onclick="return confirm('Sei sicuro di voler approvare <?php echo htmlspecialchars($utente['nome'] . ' ' . $utente['cognome']); ?>?');">
                             Approva Utente
                         </a>
                     </div>
