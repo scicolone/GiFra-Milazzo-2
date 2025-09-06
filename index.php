@@ -1,27 +1,26 @@
 <?php
 session_start();
-
 // Verifica che l'utente sia loggato
 if (!isset($_SESSION['utente_id'])) {
     header("Location: accesso.php");
     exit;
 }
-
 // Verifica che sia presidente o segretario
-$ruolo = $_SESSION['tipo_utente'];
+$tipo_utente = $_SESSION['tipo_utente'];
 if ($tipo_utente !== 'presidente' && $tipo_utente !== 'segretario') {
-    die("Accesso negato. Solo Presidente e Segretario possono accedere alla gestione completa.");
+    // Imposta una variabile di sessione per indicare il motivo del reindirizzamento
+    $_SESSION['access_denied_reason'] = 'role';
+    // Reindirizza a accesso.php
+    header("Location: accesso.php");
+    exit;
 }
-
 // Recupera dati per l'header
 require_once 'config.php';
-
 // Recupera la stagione attiva
 $stmt = $pdo->query("SELECT anno_inizio, anno_fine FROM stagioni WHERE attiva = TRUE LIMIT 1");
 $stagione_attiva = $stmt->fetch(PDO::FETCH_ASSOC);
 $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $stagione_attiva['anno_fine'] : 'Nessuna';
 ?>
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -124,10 +123,8 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
     <h1 class="brand-title mb-0">A.S.D. GI.FRA. MILAZZO</h1>
     <p class="season-text mb-0">Stagione Attiva: <?php echo $stagione_label; ?></p>
 </div>
-
 <!-- Login Button -->
 <a href="auth/logout.php" class="login-btn">Logout</a>
-
 <!-- Menu Principale -->
 <div class="container mt-4">
     <div class="row">
@@ -139,13 +136,11 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
                 <a href="moduli/stagioni.php" class="btn">CREA NUOVA STAGIONE</a>
                 <a href="moduli/cambio_stagione.php" class="btn">CAMBIO STAGIONE</a>
             </div>
-
             <div class="card">
                 <h2 class="card-title">GESTIONE DISTINTE</h2>
                 <a href="moduli/distinte/nuova_distinta.php" class="btn">NUOVA DISTINTA GARA</a>
                 <a href="moduli/distinte/elenco_distinte.php" class="btn">ELENCO DISTINTE GARA</a>
             </div>
-
             <div class="card">
                 <h2 class="card-title">MODULISTICA</h2>
                 <a href="moduli/modulistica/visita_ideoneita.php" class="btn">RICHIESTA VISITA IDONEITÀ</a>
@@ -156,7 +151,6 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
                 <a href="moduli/modulistica/rinvio_partite.php" class="btn">RINVIO PARTITE</a>
             </div>
         </div>
-
         <!-- Colonna destra -->
         <div class="col-md-4">
             <div class="card">
@@ -167,14 +161,12 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
                 <a href="moduli/anagrafiche/dirigenti.php" class="btn btn-secondary">ANAGRAFICA DIRIGENTI</a>
                 <a href="moduli/anagrafiche/osservatori.php" class="btn btn-secondary">ANAGRAFICA OSSERVATORI</a>
             </div>
-
             <div class="card">
                 <h2 class="card-title">ANAGRAFICHE STAGIONE</h2>
                 <a href="moduli/anagrafiche/tesserati.php" class="btn">TESSERATI - Anagrafica</a>
                 <a href="moduli/anagrafiche/allenatori_stagione.php" class="btn">ALLENATORI Stagione</a>
                 <a href="moduli/anagrafiche/dirigenti_stagione.php" class="btn">DIRIGENTI Stagione</a>
             </div>
-
             <div class="card">
                 <h2 class="card-title">ALTRI GESTIONALI</h2>
                 <a href="moduli/convo.php" class="btn">CONVOCAZIONI</a>
@@ -182,12 +174,10 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
             </div>
         </div>
     </div>
-
     <div class="menu-stampe">
         <a href="moduli/stampe/stampa_partite.php">MENU STAMPE</a>
     </div>
 </div>
-
 <footer class="text-center py-3 text-muted">
     &copy; 2025 A.S.D. Gi.Fra. Milazzo - Tutti i diritti riservati
 </footer>
