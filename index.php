@@ -171,14 +171,12 @@ $stagione_label = $stagione_attiva ? $stagione_attiva['anno_inizio'] . '/' . $st
                 <h2 class="card-title">ALTRI GESTIONALI</h2>
                 <a href="moduli/convo.php" class="btn">CONVOCAZIONI</a>
                 <a href="moduli/calendario/partite.php" class="btn">PARTITE - Calend. campionato</a>
+                <?php if (isset($_SESSION['tipo_utente']) && ($_SESSION['tipo_utente'] === 'presidente' || $_SESSION['tipo_utente'] === 'segretario')): ?>
+               <h2 class="card-title">AMMINISTRAZIONE</h2>
+               <a href="auth/approva_utenti.php" class="btn">APPROVA NUOVI UTENTI</a>
+               <?php endif; ?>
             </div>
-            <?php if (isset($_SESSION['tipo_utente']) && ($_SESSION['tipo_utente'] === 'presidente' || $_SESSION['tipo_utente'] === 'segretario')): ?>
-<div class="card">
-    <h2 class="card-title">AMMINISTRAZIONE</h2>
-    <a href="auth/approva_utenti.php" class="btn">APPROVA NUOVI UTENTI</a>
-</div>
-<?php endif; ?>
-        </div>
+                    </div>
     </div>
     <div class="menu-stampe">
         <a href="moduli/stampe/stampa_partite.php">MENU STAMPE</a>
