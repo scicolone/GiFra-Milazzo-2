@@ -2,7 +2,7 @@
 session_start();
 require_once '../../config.php';
 
-// Verifica che l'utente sia loggato e sia presidente o segretario
+// Verifica accesso
 if (!isset($_SESSION['utente_id'])) {
     header("Location: ../../accesso.php");
     exit;
@@ -15,10 +15,10 @@ if ($tipo_utente !== 'presidente' && $tipo_utente !== 'segretario') {
 $error = '';
 $success = '';
 
-// Gestione invio form
+// Gestione form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // --- Dati Anagrafici dell'Atleta ---
+        // --- Dati Anagrafici ---
         $id_anagrafica = $_POST['id_anagrafica'] ?? null;
         $cognome = trim($_POST['cognome'] ?? '');
         $nome = trim($_POST['nome'] ?? '');
@@ -49,9 +49,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $classe_frequenza = trim($_POST['classe_frequenza'] ?? '');
         $parrocchia_catechismo = trim($_POST['parrocchia_catechismo'] ?? '');
 
-        // --- Dati Genitore Iscrivente ---
+        // --- Foto Calciatore ---
+        $foto_calciatore = null;
+        if (isset($_FILES['foto_calciatore']) && $_FILES['foto_calciatore']['error'] === 0) {
+            $allowed_types = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (in_array($_FILES['foto_calciatore']['type'], $allowed_types)) {
+                $dir = 'uploads/foto_calciatori/';
+                if (!is_dir($dir)) mkdir($dir, 0777, true);
+                $filename = uniqid() . '_' . basename($_FILES['foto_calciatore']['name']);
+                $filepath = $dir . $filename;
+                if (move_uploaded_file($_FILES['foto_calciatore']['tmp_name'], $filepath)) {
+                    $foto_calciatore = $filepath;
+                } else {
+                    throw new Exception("Errore durante il caricamento della foto.");
+                }
+            } else {
+                throw new Exception("Tipo di file non supportato. Usa JPG, PNG.");
+            }
+        }
+
+        // --- Genitore Iscrivente ---
         $genitore_iscrivente_cognome = trim($_POST['genitore_iscrivente_cognome'] ?? '');
-        $genitore_iscrivente_nome = trim($_POST['genitore_iscrivente_nome'] ?? '');
+        $genitore_iscrivente_similarity = trim($_POST['genitore_iscrivente_name'] ?? '');
         $genitore_iscrivente_luogo_nascita = trim($_POST['genitore_iscrivente_luogo_nascita'] ?? '');
         $genitore_iscrivente_data_nascita = $_POST['genitore_iscrivente_data_nascita'] ?? null;
         $genitore_iscrivente_provincia_nascita = trim($_POST['genitore_iscrivente_provincia_nascita'] ?? '');
@@ -65,13 +84,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $genitore_iscrivente_email = trim($_POST['genitore_iscrivente_email'] ?? '');
         $genitore_iscrivente_codice_fiscale = trim($_POST['genitore_iscrivente_codice_fiscale'] ?? '');
 
-        // --- Dati Genitore Fiscale ---
+        // --- Genitore Fiscale ---
         $genitori_stessi = isset($_POST['genitori_stessi']) ? 1 : 0;
 
         if ($genitori_stessi) {
-            // Se i genitori sono gli stessi, copia i dati
             $genitore_fiscale_cognome = $genitore_iscrivente_cognome;
-            $genitore_fiscale_nome = $genitore_iscrivente_nome;
+            $genitore_fiscale_name = $genitore_iscrivente_name;
             $genitore_fiscale_luogo_nascita = $genitore_iscrivente_luogo_nascita;
             $genitore_fiscale_data_nascita = $genitore_iscrivente_data_nascita;
             $genitore_fiscale_provincia_nascita = $genitore_iscrivente_provincia_nascita;
@@ -85,9 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $genitore_fiscale_email = $genitore_iscrivente_email;
             $genitore_fiscale_codice_fiscale = $genitore_iscrivente_codice_fiscale;
         } else {
-            // Altrimenti, prendi i dati specifici
             $genitore_fiscale_cognome = trim($_POST['genitore_fiscale_cognome'] ?? '');
-            $genitore_fiscale_nome = trim($_POST['genitore_fiscale_nome'] ?? '');
+            $genitore_fiscale_name = trim($_POST['genitore_fiscale_name'] ?? '');
             $genitore_fiscale_luogo_nascita = trim($_POST['genitore_fiscale_luogo_nascita'] ?? '');
             $genitore_fiscale_data_nascita = $_POST['genitore_fiscale_data_nascita'] ?? null;
             $genitore_fiscale_provincia_nascita = trim($_POST['genitore_fiscale_provincia_nascita'] ?? '');
@@ -102,52 +119,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $genitore_fiscale_codice_fiscale = trim($_POST['genitore_fiscale_codice_fiscale'] ?? '');
         }
 
-        // Validazione di base
+        // Validazione base
         if (empty($cognome) || empty($nome) || empty($data_nascita) || empty($comune_residenza) || empty($via_piazza)) {
-            $error = "I campi obbligatori (Cognome, Nome, Data di Nascita, Comune di Residenza, Via/Piazza) non possono essere vuoti.";
+            $error = "I campi obbligatori non possono essere vuoti.";
         } else {
-            // Inserimento nel database
-            $sql = "INSERT INTO atleti 
-            (id_anagrafica, cognome, nome, data_nascita, luogo_nascita, nazionalita, piede, status_giocatore, tesserato_figc, 
-             doc_riconoscimento, n_doc_riconoscimento, comune_rilascio_ci, comune_residenza, via_piazza, numero_civico, cap, prov, 
-             telefono_casa, telefono_lavoro, telefono_cellulare, telefono_mamma, telefono_papa, codice_fiscale, numero_tessera_asl, 
-             numero_tessera_figc, indirizzo_email, scuola, classe_frequenza, parrocchia_catechismo,
-             genitore_iscrivente_cognome, genitore_iscrivente_nome, genitore_iscrivente_luogo_nascita, genitore_iscrivente_data_nascita,
-             genitore_iscrivente_provincia_nascita, genitore_iscrivente_comune_residenza, genitore_iscrivente_provincia_residenza,
-             genitore_iscrivente_cap, genitore_iscrivente_via_piazza, genitore_iscrivente_numero_civico,
-             genitore_iscrivente_telefono, genitore_iscrivente_cellulare, genitore_iscrivente_email,
-             genitore_iscrivente_codice_fiscale,
-             genitore_fiscale_cognome, genitore_fiscale_nome, genitore_fiscale_luogo_nascita, genitore_fiscale_data_nascita,
-             genitore_fiscale_provincia_nascita, genitore_fiscale_comune_residenza, genitore_fiscale_provincia_residenza,
-             genitore_fiscale_cap, genitore_fiscale_via_piazza, genitore_fiscale_numero_civico,
-             genitore_fiscale_telefono, genitore_fiscale_cellulare, genitore_fiscale_email,
-             genitore_fiscale_codice_fiscale, genitori_stessi)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-            $stmt = $pdo->prepare($sql);
+            // Inserisci il genitore iscrivente nella tabella utenti
+            $stmt = $pdo->prepare("INSERT INTO utenti (nome, cognome, luogo_nascita, provincia_nascita, data_nascita, sesso, comune_residenza, provincia_residenza, cap, via_piazza, numero_civico, cittadinanza, telefono, cellulare, email, password, tipo_utente, approvato) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)");
             $stmt->execute([
-                $id_anagrafica, $cognome, $nome, $data_nascita, $luogo_nascita, $nazionalita, $piede, $status_giocatore, $tesserato_figc,
-                $doc_riconoscimento, $n_doc_riconoscimento, $comune_rilascio_ci, $comune_residenza, $via_piazza, $numero_civico, $cap, $prov,
-                $telefono_casa, $telefono_lavoro, $telefono_cellulare, $telefono_mamma, $telefono_papa, $codice_fiscale, $numero_tessera_asl,
-                $numero_tessera_figc, $indirizzo_email, $scuola, $classe_frequenza, $parrocchia_catechismo,
-                $genitore_iscrivente_cognome, $genitore_iscrivente_nome, $genitore_iscrivente_luogo_nascita, $genitore_iscrivente_data_nascita,
-                $genitore_iscrivente_provincia_nascita, $genitore_iscrivente_comune_residenza, $genitore_iscrivente_provincia_residenza,
-                $genitore_iscrivente_cap, $genitore_iscrivente_via_piazza, $genitore_iscrivente_numero_civico,
-                $genitore_iscrivente_telefono, $genitore_iscrivente_cellulare, $genitore_iscrivente_email,
-                $genitore_iscrivente_codice_fiscale,
-                $genitore_fiscale_cognome, $genitore_fiscale_nome, $genitore_fiscale_luogo_nascita, $genitore_fiscale_data_nascita,
-                $genitore_fiscale_provincia_nascita, $genitore_fiscale_comune_residenza, $genitore_fiscale_provincia_residenza,
-                $genitore_fiscale_cap, $genitore_fiscale_via_piazza, $genitore_fiscale_numero_civico,
-                $genitore_fiscale_telefono, $genitore_fiscale_cellulare, $genitore_fiscale_email,
-                $genitore_fiscale_codice_fiscale, $genitori_stessi
+                $genitore_iscrivente_name, $genitore_iscrivente_cognome, $genitore_iscrivente_luogo_nascita, $genitore_iscrivente_provincia_nascita, $genitore_iscrivente_data_nascita, 'M', $genitore_iscrivente_comune_residenza, $genitore_iscrivente_provincia_residenza, $genitore_iscrivente_cap, $genitore_iscrivente_via_piazza, $genitore_iscrivente_numero_civico, 'Italiana', $genitore_iscrivente_telefono, $genitore_iscrivente_cellulare, $genitore_iscrivente_email, password_hash('temp_password', PASSWORD_DEFAULT), 'genitore', TRUE
+            ]);
+            $id_genitore = $pdo->lastInsertId();
+
+            // Inserisci il genitore fiscale (se diverso)
+            if (!$genitori_stessi) {
+                $stmt = $pdo->prepare("INSERT INTO utenti (nome, cognome, luogo_nascita, provincia_nascita, data_nascita, sesso, comune_residenza, provincia_residenza, cap, via_piazza, numero_civico, cittadinanza, telefono, cellulare, email, password, tipo_utente, approvato) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)");
+                $stmt->execute([
+                    $genitore_fiscale_name, $genitore_fiscale_cognome, $genitore_fiscale_luogo_nascita, $genitore_fiscale_provincia_nascita, $genitore_fiscale_data_nascita, 'M', $genitore_fiscale_comune_residenza, $genitore_fiscale_provincia_residenza, $genitore_fiscale_cap, $genitore_fiscale_via_piazza, $genitore_fiscale_numero_civico, 'Italiana', $genitore_fiscale_telefono, $genitore_fiscale_cellulare, $genitore_fiscale_email, password_hash('temp_password', PASSWORD_DEFAULT), 'genitore', TRUE
+                ]);
+                $id_genitore_fiscale = $pdo->lastInsertId();
+            } else {
+                $id_genitore_fiscale = $id_genitore;
+            }
+
+            // Inserisci il calciatore
+            $stmt = $pdo->prepare("INSERT INTO atleti (id_anagrafica, cognome, nome, data_nascita, luogo_nascita, nazionalita, piede, status_giocatore, tesserato_figc, doc_riconoscimento, n_doc_riconoscimento, comune_rilascio_ci, comune_residenza, via_piazza, numero_civico, cap, prov, telefono_casa, telefono_lavoro, telefono_cellulare, telefono_mamma, telefono_papa, codice_fiscale, numero_tessera_asl, numero_tessera_figc, indirizzo_email, scuola, classe_frequenza, parrocchia_catechismo, foto_calciatore, id_genitore, id_genitore_fiscale) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([
+                $id_anagrafica, $cognome, $nome, $data_nascita, $luogo_nascita, $nazionalita, $piede, $status_giocatore, $tesserato_figc, $doc_riconoscimento, $n_doc_riconoscimento, $comune_rilascio_ci, $comune_residenza, $via_piazza, $numero_civico, $cap, $prov, $telefono_casa, $telefono_lavoro, $telefono_cellulare, $telefono_mamma, $telefono_papa, $codice_fiscale, $numero_tessera_asl, $numero_tessera_figc, $indirizzo_email, $scuola, $classe_frequenza, $parrocchia_catechismo, $foto_calciatore, $id_genitore, $id_genitore_fiscale
             ]);
 
             $success = "Anagrafica atleta creata con successo!";
-            // Reset dei campi dopo l'inserimento
-            $_POST = array();
+            $_POST = array(); // Reset dei campi
         }
     } catch (Exception $e) {
-        $error = "Errore durante la creazione dell'anagrafica: " . $e->getMessage();
+        $error = "Errore: " . $e->getMessage();
     }
 }
 ?>
@@ -156,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Crea Anagrafica Atleta - A.S.D. Gi.Fra. Milazzo</title>
+    <title>Crea Anagrafica Atleta</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -219,12 +223,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-color: #1e7e34;
         }
         .genitore-fiscale-section {
-            display: none; /* Nascondi di default */
+            display: none;
         }
     </style>
 </head>
 <body>
-    <!-- Header con logo e stagione -->
+    <!-- Header -->
     <div class="header">
         <img src="../../img/logo.png" alt="Logo Gi.Fra. Milazzo" class="logo">
         <h1 class="brand-title mb-0">A.S.D. GI.FRA. MILAZZO</h1>
@@ -243,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <!-- Scheda ANAGRAFICA -->
                 <h4 class="section-title">ANAGRAFICA</h4>
                 
@@ -468,7 +472,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <!-- Sezione Genitore Iscrivente -->
+                <!-- Foto Calciatore -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="foto_calciatore" class="form-label">Foto Calciatore</label>
+                            <input type="file" class="form-control" id="foto_calciatore" name="foto_calciatore" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="id_anagrafica" class="form-label">ID Anagrafica</label>
+                            <input type="text" class="form-control" id="id_anagrafica" name="id_anagrafica" value="<?php echo htmlspecialchars($_POST['id_anagrafica'] ?? ''); ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Genitore Iscrivente -->
                 <h4 class="section-title">GENITORE ISCRIVENTE</h4>
                 
                 <div class="row">
@@ -480,8 +500,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="genitore_iscrivente_nome" class="form-label">Nome</label>
-                            <input type="text" class="form-control" id="genitore_iscrivente_nome" name="genitore_iscrivente_nome" value="<?php echo htmlspecialchars($_POST['genitore_iscrivente_nome'] ?? ''); ?>">
+                            <label for="genitore_iscrivente_name" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="genitore_iscrivente_name" name="genitore_iscrivente_name" value="<?php echo htmlspecialchars($_POST['genitore_iscrivente_name'] ?? ''); ?>">
                         </div>
                     </div>
                 </div>
@@ -580,7 +600,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <!-- Sezione Genitore Fiscale (opzionale) -->
+                <!-- Genitore Fiscale -->
                 <div id="genitoreFiscaleSection" class="genitore-fiscale-section">
                     <h4 class="section-title">GENITORE FISCALE</h4>
                     
@@ -593,8 +613,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="genitore_fiscale_nome" class="form-label">Nome</label>
-                                <input type="text" class="form-control" id="genitore_fiscale_nome" name="genitore_fiscale_nome" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_nome'] ?? ''); ?>">
+                                <label for="genitore_fiscale_name" class="form-label">Nome</label>
+                                <input type="text" class="form-control" id="genitore_fiscale_name" name="genitore_fiscale_name" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_name'] ?? ''); ?>">
                             </div>
                         </div>
                     </div>
@@ -697,22 +717,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </footer>
 
     <script>
-        // Funzione per mostrare/nascondere la sezione genitore fiscale
         function toggleGenitoreFiscale() {
             const checkbox = document.getElementById('genitori_stessi');
             const section = document.getElementById('genitoreFiscaleSection');
-            
             if (checkbox.checked) {
                 section.style.display = 'none';
             } else {
                 section.style.display = 'block';
             }
         }
-        
-        // Esegui all'inizio per impostare lo stato corretto
-        document.addEventListener('DOMContentLoaded', function() {
-            toggleGenitoreFiscale();
-        });
+        document.addEventListener('DOMContentLoaded', toggleGenitoreFiscale);
     </script>
 </body>
 </html>
