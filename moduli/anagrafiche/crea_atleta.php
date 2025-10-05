@@ -16,7 +16,6 @@ $error = '';
 $success = '';
 
 // Genera ID anagrafica automaticamente (esempio: progressivo)
-// In produzione, potresti usare un formato più sofisticato o un contatore nel DB
 $stmt_max = $pdo->query("SELECT MAX(CAST(id_anagrafica AS UNSIGNED)) as max_id FROM atleti");
 $max_id_result = $stmt_max->fetch(PDO::FETCH_ASSOC);
 $id_anagrafica = str_pad(($max_id_result['max_id'] ?? 0) + 1, 4, '0', STR_PAD_LEFT); // Esempio: 0001, 0002, ...
@@ -184,16 +183,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // 3. Inserisci l'atleta nella tabella `atleti`
                 // NOTA BENE: La query deve avere esattamente 34 valori (escluso `id` autoincrementale)
-                // Contiamo le colonne:
-                // id_anagrafica, cognome, nome, data_nascita, luogo_nascita, nazionalita,
-                // status_giocatore, tesserato_figc, tesserato_csi, doc_riconoscimento,
-                // n_doc_riconoscimento, comune_rilascio_ci, comune_residenza, via_piazza,
-                // numero_civico, cap, prov, telefono_casa, telefono_lavoro, telefono_cellulare,
-                // telefono_mamma, telefono_papa, codice_fiscale, numero_tessera_asl,
-                // numero_tessera_figc, indirizzo_email, scuola, classe_frequenza,
-                // parrocchia_catechismo, foto_calciatore, id_genitore, id_genitore_fiscale
-                // (Totale: 34 colonne -> 34 segnaposto ?)
-                
                 $stmt_atleta = $pdo->prepare("
                     INSERT INTO atleti 
                     (id_anagrafica, cognome, nome, data_nascita, luogo_nascita, nazionalita,
@@ -503,53 +492,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="col-md-4">
                     <div class="mb-3">
-                         <label for="foto_calciatore" class="form-label">Foto Calciatore</label>
-                         <input type="file" class="form-control" id="foto_calciatore" name="foto_calciatore" accept="image/*">
-                         <div class="photo-preview" id="photoPreview">
-                             <span>Anteprima</span>
-                             <img id="previewImage" src="" alt="Anteprima Foto" style="display:none;">
-                         </div>
+                        <label for="scuola" class="form-label">Scuola</label>
+                        <input type="text" class="form-control" id="scuola" name="scuola" value="<?php echo htmlspecialchars($_POST['scuola'] ?? ''); ?>">
                     </div>
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="scuola" class="form-label">Scuola</label>
-                        <input type="text" class="form-control" id="scuola" name="scuola" value="<?php echo htmlspecialchars($_POST['scuola'] ?? ''); ?>">
-                    </div>
-                </div>
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="classe_frequenza" class="form-label">Classe di Frequenza</label>
                         <input type="text" class="form-control" id="classe_frequenza" name="classe_frequenza" value="<?php echo htmlspecialchars($_POST['classe_frequenza'] ?? ''); ?>">
                     </div>
                 </div>
-            </div>
-
-            <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="parrocchia_catechismo" class="form-label">Parrocchia del Catechismo</label>
                         <input type="text" class="form-control" id="parrocchia_catechismo" name="parrocchia_catechismo" value="<?php echo htmlspecialchars($_POST['parrocchia_catechismo'] ?? ''); ?>">
                     </div>
                 </div>
+            </div>
+
+            <!-- Foto Calciatore -->
+            <div class="row">
                 <div class="col-md-6">
-                     <div class="mb-3">
-                         <label class="form-label">Tesseramenti</label>
-                         <div>
-                             <div class="form-check form-check-inline">
-                                 <input class="form-check-input" type="checkbox" id="tesserato_figc" name="tesserato_figc" <?php echo (isset($_POST['tesserato_figc']) || (!$_POST && false)) ? 'checked' : ''; ?>>
-                                 <label class="form-check-label" for="tesserato_figc">Tesserato FIGC</label>
-                             </div>
-                             <div class="form-check form-check-inline">
-                                 <input class="form-check-input" type="checkbox" id="tesserato_csi" name="tesserato_csi" <?php echo (isset($_POST['tesserato_csi']) || (!$_POST && false)) ? 'checked' : ''; ?>>
-                                 <label class="form-check-label" for="tesserato_csi">Tesserato C.S.I.</label>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
+                    <div class="mb-3">
+                        <label for="foto_calciatore" class="form-label">Foto Calciatore</label>
+                        <input type="file" class="form-control" id="foto_calciatore" name="foto_calciatore" accept="image/*">
+                        <div class="photo-preview" id="photoPreview">
+                            <span>Anteprima</span>
+                            <img id="previewImage" src="" alt="Anteprima Foto" style="display:none;">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Tesseramenti</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="tesserato_figc" name="tesserato_figc" <?php echo (isset($_POST['tesserato_figc']) || (!$_POST && false)) ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="tesserato_figc">Tesserato FIGC</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="tesserato_csi" name="tesserato_csi" <?php echo (isset($_POST['tesserato_csi']) || (!$_POST && false)) ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="tesserato_csi">Tesserato C.S.I.</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="row">
@@ -723,3 +713,131 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="mb-3">
                             <label for="genitore_fiscale_luogo_nascita" class="form-label">Luogo di Nascita</label>
                             <input type="text" class="form-control" id="genitore_fiscale_luogo_nascita" name="genitore_fiscale_luogo_nascita" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_luogo_nascita'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_provincia_nascita" class="form-label">Provincia di Nascita</label>
+                            <input type="text" class="form-control" id="genitore_fiscale_provincia_nascita" name="genitore_fiscale_provincia_nascita" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_provincia_nascita'] ?? ''); ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_comune_residenza" class="form-label">Comune di Residenza</label>
+                            <input type="text" class="form-control" id="genitore_fiscale_comune_residenza" name="genitore_fiscale_comune_residenza" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_comune_residenza'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_provincia_residenza" class="form-label">Provincia Res.</label>
+                            <input type="text" class="form-control" id="genitore_fiscale_provincia_residenza" name="genitore_fiscale_provincia_residenza" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_provincia_residenza'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_cap" class="form-label">CAP</label>
+                            <input type="text" class="form-control" id="genitore_fiscale_cap" name="genitore_fiscale_cap" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_cap'] ?? ''); ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_via_piazza" class="form-label">Via/Piazza</label>
+                            <input type="text" class="form-control" id="genitore_fiscale_via_piazza" name="genitore_fiscale_via_piazza" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_via_piazza'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_numero_civico" class="form-label">N. Civico</label>
+                            <input type="text" class="form-control" id="genitore_fiscale_numero_civico" name="genitore_fiscale_numero_civico" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_numero_civico'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_codice_fiscale" class="form-label">Codice Fiscale</label>
+                            <input type="text" class="form-control" id="genitore_fiscale_codice_fiscale" name="genitore_fiscale_codice_fiscale" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_codice_fiscale'] ?? ''); ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_telefono" class="form-label">Telefono</label>
+                            <input type="text" class="form-control" id="genitore_fiscale_telefono" name="genitore_fiscale_telefono" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_telefono'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_cellulare" class="form-label">Cellulare</label>
+                            <input type="text" class="form-control" id="genitore_fiscale_cellulare" name="genitore_fiscale_cellulare" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_cellulare'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="genitore_fiscale_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="genitore_fiscale_email" name="genitore_fiscale_email" value="<?php echo htmlspecialchars($_POST['genitore_fiscale_email'] ?? ''); ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pulsanti di azione -->
+            <div class="mt-4 text-center">
+                <button type="submit" class="btn btn-success">💾 Salva Anagrafica</button>
+                <a href="../../index.php" class="btn btn-secondary">🏠 Torna alla Home</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<footer class="text-center py-3 text-muted mt-4">
+    &copy; 2025 A.S.D. Gi.Fra. Milazzo - Tutti i diritti riservati
+</footer>
+
+<script>
+    // Funzione per mostrare/nascondere la sezione genitore fiscale
+    function toggleGenitoreFiscale() {
+        const checkbox = document.getElementById('genitore_diverso');
+        const section = document.getElementById('genitoreFiscaleSection');
+        
+        if (checkbox.checked) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    }
+    
+    // Esegui all'inizio per impostare lo stato corretto
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleGenitoreFiscale();
+    });
+
+    // Anteprima foto
+    document.getElementById('foto_calciatore').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('previewImage');
+        const container = document.getElementById('photoPreview');
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+                container.querySelector('span').style.display = 'none'; // Nascondi il testo "Anteprima"
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '';
+            preview.style.display = 'none';
+            container.querySelector('span').style.display = 'block'; // Mostra il testo "Anteprima"
+        }
+    });
+</script>
+</body>
+</html>
