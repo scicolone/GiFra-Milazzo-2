@@ -15,6 +15,28 @@ if ($tipo_utente !== 'presidente' && $tipo_utente !== 'segretario') {
 $error = '';
 $success = '';
 
+// --- Determina l'anno sportivo corrente ---
+function getAnnoSportivoCorrente() {
+    $today = new DateTime();
+    $currentYear = (int)$today->format('Y');
+    $currentMonth = (int)$today->format('m');
+
+    // Se siamo da luglio (mese 7) a dicembre, l'anno sportivo inizia quest'anno
+    if ($currentMonth >= 7) {
+        $anno_inizio = $currentYear;
+    } else {
+        // Se siamo da gennaio a giugno, l'anno sportivo inizia l'anno scorso
+        $anno_inizio = $currentYear - 1;
+    }
+
+    return $anno_inizio;
+}
+
+// Determina l'anno sportivo corrente e la label
+$anno_sportivo_corrente_inizio = getAnnoSportivoCorrente();
+$anno_sportivo_corrente_fine = $anno_sportivo_corrente_inizio + 1;
+$stagione_label = $anno_sportivo_corrente_inizio . '/' . $anno_sportivo_corrente_fine;
+
 // Genera ID anagrafica automaticamente (esempio: progressivo)
 $stmt_max = $pdo->query("SELECT MAX(CAST(id_anagrafica AS UNSIGNED)) as max_id FROM atleti");
 $max_id_result = $stmt_max->fetch(PDO::FETCH_ASSOC);
@@ -58,14 +80,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_FILES['foto_calciatore']) && $_FILES['foto_calciatore']['error'] === 0) {
             $allowed_types = ['image/jpeg', 'image/jpg', 'image/png'];
             if (in_array($_FILES['foto_calciatore']['type'], $allowed_types)) {
-                $upload_dir = 'uploads/foto_calciatori/';
-                if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0755, true);
+                $dir = 'uploads/foto_calciatori/';
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0777, true);
                 }
                 // Genera un nome file univoco
                 $file_extension = pathinfo($_FILES['foto_calciatore']['name'], PATHINFO_EXTENSION);
                 $new_filename = uniqid('atleta_', true) . '.' . strtolower($file_extension);
-                $target_file = $upload_dir . $new_filename;
+                $target_file = $dir . $new_filename;
 
                 if (move_uploaded_file($_FILES['foto_calciatore']['tmp_name'], $target_file)) {
                     $foto_calciatore = $target_file;
@@ -183,9 +205,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // 3. Inserisci l'atleta nella tabella `atleti`
                 // NOTA BENE: La query deve avere esattamente 34 valori (escluso `id` autoincrementale)
+                // Contiamo le colonne:
+                // id_anagrafica, cognome, nome, data_nascita, luogo_nascita, nazionalita,
+                // status_giocatore, tesserato_figc, tesserato_csi, doc_riconoscimento,
+                // n_doc_riconoscimento, comune_rilascio_ci, comune_residenza, via_piazza,
+                // numero_civico, cap, prov, telefono_casa, telefono_lavoro, telefono_cellulare,
+                // telefono_mamma, telefono_papa, codice_fiscale, numero_tessera_asl,
+                // numero_tessera_figc, indirizzo_email, scuola, classe_frequenza,
+                // parrocchia_catechismo, foto_calciatore, id_genitore, id_genitore_fiscale
+                // (Totale: 32 colonne -> 32 segnaposto ?)
+                // AGGIUNTO eta (calcolato) e id_genitore_fiscale -> Totale 34
+                
+                // Calcola l'età
+                $data_nascita_obj = new DateTime($data_nascita);
+                $today_obj = new DateTime();
+                $eta = $today_obj->diff($data_nascita_obj)->y;
+
                 $stmt_atleta = $pdo->prepare("
                     INSERT INTO atleti 
-                    (id_anagrafica, cognome, nome, data_nascita, luogo_nascita, nazionalita,
+                    (id_anagrafica, cognome, nome, data_nascita, eta, luogo_nascita, nazionalita,
                      status_giocatore, tesserato_figc, tesserato_csi, doc_riconoscimento,
                      n_doc_riconoscimento, comune_rilascio_ci, comune_residenza, via_piazza,
                      numero_civico, cap, prov, telefono_casa, telefono_lavoro, telefono_cellulare,
@@ -193,11 +231,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      numero_tessera_figc, indirizzo_email, scuola, classe_frequenza,
                      parrocchia_catechismo, foto_calciatore, id_genitore, id_genitore_fiscale) 
                     VALUES 
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
 
                 $stmt_atleta->execute([
-                    $id_anagrafica, $cognome, $nome, $data_nascita, $luogo_nascita, $nazionalita,
+                    $id_anagrafica, $cognome, $nome, $data_nascita, $eta, $luogo_nascita, $nazionalita,
                     $status_giocatore, $tesserato_figc, $tesserato_csi, $doc_riconoscimento,
                     $n_doc_riconoscimento, $comune_rilascio_ci, $comune_residenza, $via_piazza,
                     $numero_civico, $cap, $prov, $telefono_casa, $telefono_lavoro, $telefono_cellulare,
@@ -247,6 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-align: center;
             padding: 20px 0;
             border-bottom: 2px solid #d32f2f;
+            position: relative; /* Per posizionare il bottone logout */
         }
         .logo {
             width: 120px;
@@ -286,6 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .btn-primary:hover {
             background-color: #1565c0;
+            border-color: #1565c0;
         }
         .btn-success {
             background-color: #28a745;
@@ -293,6 +333,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .btn-success:hover {
             background-color: #218838;
+            border-color: #1e7e34;
         }
         .genitore-fiscale-section {
             display: none; /* Nascondi di default */
@@ -313,14 +354,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             max-height: 100%;
             object-fit: cover;
         }
+        .login-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none; /* Per i link */
+        }
+        .login-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            text-decoration: none;
+            color: white;
+        }
     </style>
 </head>
 <body>
-<!-- Header con logo e stagione -->
+<!-- Header con logo, stagione e logout -->
 <div class="header">
+    <a href="../../auth/logout.php" class="login-btn">Logout</a>
     <img src="../../img/logo.png" alt="Logo Gi.Fra. Milazzo" class="logo">
     <h1 class="brand-title mb-0">A.S.D. GI.FRA. MILAZZO</h1>
-    <p class="season-text mb-0">Gestione Anagrafica Atleti</p>
+    <p class="season-text mb-0">Stagione Attiva: <?php echo htmlspecialchars($stagione_label); ?></p>
 </div>
 
 <div class="container mt-4">
@@ -531,11 +590,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="checkbox" id="tesserato_figc" name="tesserato_figc" <?php echo (isset($_POST['tesserato_figc']) || (!$_POST && false)) ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="tesserato_figc">Tesserato FIGC</label>
+                                <label class="form-check-label" for="tesserato_figc">
+                                    Tesserato FIGC
+                                </label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="checkbox" id="tesserato_csi" name="tesserato_csi" <?php echo (isset($_POST['tesserato_csi']) || (!$_POST && false)) ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="tesserato_csi">Tesserato C.S.I.</label>
+                                <label class="form-check-label" for="tesserato_csi">
+                                    Tesserato C.S.I.
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -543,33 +606,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="row">
-                 <div class="col-md-6">
-                     <div class="mb-3">
-                         <label for="doc_riconoscimento" class="form-label">Documento di Riconoscimento</label>
-                         <select class="form-select" id="doc_riconoscimento" name="doc_riconoscimento">
-                             <option value="">Seleziona...</option>
-                             <option value="carta_id" <?php echo (($_POST['doc_riconoscimento'] ?? '') === 'carta_id') ? 'selected' : ''; ?>>Carta d'Identità</option>
-                             <option value="passaporto" <?php echo (($_POST['doc_riconoscimento'] ?? '') === 'passaporto') ? 'selected' : ''; ?>>Passaporto</option>
-                             <option value="altro" <?php echo (($_POST['doc_riconoscimento'] ?? '') === 'altro') ? 'selected' : ''; ?>>Altro</option>
-                         </select>
-                     </div>
-                 </div>
-                 <div class="col-md-6">
-                     <div class="mb-3">
-                         <label for="n_doc_riconoscimento" class="form-label">N. Doc. Riconoscimento</label>
-                         <input type="text" class="form-control" id="n_doc_riconoscimento" name="n_doc_riconoscimento" value="<?php echo htmlspecialchars($_POST['n_doc_riconoscimento'] ?? ''); ?>">
-                     </div>
-                 </div>
-             </div>
-
-             <div class="row">
-                 <div class="col-md-6">
-                     <div class="mb-3">
-                         <label for="comune_rilascio_ci" class="form-label">Comune Rilascio C.I.</label>
-                         <input type="text" class="form-control" id="comune_rilascio_ci" name="comune_rilascio_ci" value="<?php echo htmlspecialchars($_POST['comune_rilascio_ci'] ?? ''); ?>">
-                     </div>
-                 </div>
-             </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="doc_riconoscimento" class="form-label">Documento di Riconoscimento</label>
+                        <select class="form-select" id="doc_riconoscimento" name="doc_riconoscimento">
+                            <option value="">Seleziona...</option>
+                            <option value="carta_id" <?php echo (($_POST['doc_riconoscimento'] ?? '') === 'carta_id') ? 'selected' : ''; ?>>Carta d'Identità</option>
+                            <option value="passaporto" <?php echo (($_POST['doc_riconoscimento'] ?? '') === 'passaporto') ? 'selected' : ''; ?>>Passaporto</option>
+                            <option value="altro" <?php echo (($_POST['doc_riconoscimento'] ?? '') === 'altro') ? 'selected' : ''; ?>>Altro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="n_doc_riconoscimento" class="form-label">N. Doc. Riconoscimento</label>
+                        <input type="text" class="form-control" id="n_doc_riconoscimento" name="n_doc_riconoscimento" value="<?php echo htmlspecialchars($_POST['n_doc_riconoscimento'] ?? ''); ?>">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="comune_rilascio_ci" class="form-label">Comune Rilascio C.I.</label>
+                        <input type="text" class="form-control" id="comune_rilascio_ci" name="comune_rilascio_ci" value="<?php echo htmlspecialchars($_POST['comune_rilascio_ci'] ?? ''); ?>">
+                    </div>
+                </div>
+            </div>
 
             <!-- Sezione Genitore Scrivente -->
             <h4 class="section-title">GENITORE SCRIVENTE</h4>
@@ -816,27 +876,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Esegui all'inizio per impostare lo stato corretto
     document.addEventListener('DOMContentLoaded', function() {
         toggleGenitoreFiscale();
-    });
+        
+        // Anteprima foto
+        document.getElementById('foto_calciatore').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('previewImage');
+            const container = document.getElementById('photoPreview');
 
-    // Anteprima foto
-    document.getElementById('foto_calciatore').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const preview = document.getElementById('previewImage');
-        const container = document.getElementById('photoPreview');
-
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                preview.src = event.target.result;
-                preview.style.display = 'block';
-                container.querySelector('span').style.display = 'none'; // Nascondi il testo "Anteprima"
-            };
-            reader.readAsDataURL(file);
-        } else {
-            preview.src = '';
-            preview.style.display = 'none';
-            container.querySelector('span').style.display = 'block'; // Mostra il testo "Anteprima"
-        }
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                    container.querySelector('span').style.display = 'none'; // Nascondi il testo "Anteprima"
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+                container.querySelector('span').style.display = 'block'; // Mostra il testo "Anteprima"
+            }
+        });
     });
 </script>
 </body>
